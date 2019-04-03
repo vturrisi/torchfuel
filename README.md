@@ -1,11 +1,9 @@
-# Nemenyi
+# torchfuel
 
-Library to perform Friedman statistical test and Nemenyi post-hoc analysis
+Library build on top of pytorch to fuel productivity
 
 # How to install
 
 ```bash
 pip install . --user
 ```
-
-## This work is a port from an old Java code to Python
