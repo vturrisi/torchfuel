@@ -7,46 +7,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from tqdm import tqdm
-
 import torchfuel.trainers.const as const
-from torchfuel.trainers.generic_hooks import compute_epoch_time, log_start_time
+from torchfuel.trainers.generic_hooks import (compute_epoch_time,
+                                              log_start_time,
+                                              step_on_plateau_scheduler,
+                                              step_scheduler)
 from torchfuel.trainers.metrics import compute_epoch_loss
-
-
-class Placeholder:
-    def __init__(self):
-        self.stored_objects = {}
-
-    def __repr__(self):
-        arg = ','.join(self.stored_objects.keys())
-        return 'Placeholder with objects ({})'.format(arg)
-
-    def __setattr__(self, name, value):
-        if name != 'stored_objects':
-            self.stored_objects[name] = value
-        else:
-            super().__setattr__(name, value)
-
-    def __getattr__(self, name):
-        '''
-        intercept lookups which would raise an exception
-        to check if variable is being stored
-        '''
-        if name in self.stored_objects:
-            return self.stored_objects[name]
-        else:
-            return super().__getattr__(name)
-
-    def pickle_safe(self, file):
-        pickle.dump(self, open(file, 'wb'))
-
-
-class State:
-    def __init__(self):
-        self.general = Placeholder()
-        self.train = Placeholder()
-        self.eval = Placeholder()
+from torchfuel.trainers.state import State
+from torchfuel.utils.time_parser import parse_seconds
+from tqdm import tqdm
 
 
 class GenericTrainer:
@@ -75,10 +44,9 @@ class GenericTrainer:
             self.print_template = ()
 
         if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
-            # TODO add hooks
-            self.scheduler_reduce_on_plateau = True
+            self._hooks[const.AFTER_EPOCH].append(step_on_plateau_scheduler)
         else:
-            self.scheduler_reduce_on_plateau = False
+            self._hooks[const.BEFORE_EPOCH].append(step_scheduler)
 
     @abstractmethod
     def compute_loss(self, output, y):
@@ -96,7 +64,7 @@ class GenericTrainer:
     def run_hooks(self, where):
         if where in self._hooks:
             for hook in self._hooks[where]:
-                hook(self.state)
+                hook(self)
         else:
             raise ValueError('Hook {} does not exists'.format(where))
 
@@ -207,9 +175,6 @@ class GenericTrainer:
             # run hooks before epoch
             self.run_hooks(const.BEFORE_EPOCH)
 
-            if not self.scheduler_reduce_on_plateau:
-                self.scheduler.step()
-
             # run hooks before train
             self.run_hooks(const.BEFORE_TRAIN)
 
@@ -229,10 +194,6 @@ class GenericTrainer:
             # run hooks after epoch
             self.run_hooks(const.AFTER_EPOCH)
 
-            if self.scheduler_reduce_on_plateau:
-                eval_loss = self.state.eval_loss
-                self.scheduler.step(eval_loss)
-
             best_model = self.update_best_model(best_model, eval_epoch_stats)
 
             if self.print_perf:
@@ -241,14 +202,9 @@ class GenericTrainer:
             if epoch != 0:
                 self.save_model(epoch, best_model)
 
-
-            exit()
-
         end_time = time.time()
-        elapsed_time = end_time - self.state.generic.start_time
-        days, elapsed_time = divmod(elapsed_time, 86400)
-        hours, elapsed_time = divmod(elapsed_time, 3600)
-        minutes, elapsed_time = divmod(elapsed_time, 60)
-        print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, elapsed_time))
+        elapsed_time = end_time - self.state.general.start_time
+        days, hours, minutes, seconds = parse_seconds(elapsed_time)
+        print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
 
         return self.model.load_state_dict(best_model['model'])

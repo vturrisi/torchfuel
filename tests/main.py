@@ -9,7 +9,7 @@ from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageDataLoader
-from torchfuel.trainers.classification import BasicClassificationTrainer
+from torchfuel.trainers.classification import ClassificationTrainer
 
 
 class Flatten(nn.Module):
@@ -66,6 +66,6 @@ optimiser = optim.SGD([{'params': model.activations.parameters(), 'lr': 0.005},
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=20)
 
-trainer = BasicClassificationTrainer(device, model, optimiser, scheduler)
+trainer = ClassificationTrainer(device, model, optimiser, scheduler)
 
 model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)

@@ -2,9 +2,10 @@ import torch
 import torch.nn.functional as F
 
 from torchfuel.trainers.generic import GenericTrainer
+import torchfuel.trainers.const as const
+from torchfuel.trainers.metrics import compute_epoch_acc
 
-
-class BasicClassificationTrainer(GenericTrainer):
+class ClassificationTrainer(GenericTrainer):
     def __init__(self, device, model, optimiser, scheduler,
                  model_name='model.pt', print_perf=True):
         super().__init__(
@@ -16,25 +17,20 @@ class BasicClassificationTrainer(GenericTrainer):
             print_perf=print_perf
         )
 
+        self._hooks[const.AFTER_EPOCH].append(compute_epoch_acc)
+
     def compute_loss(self, output, y):
         return F.cross_entropy(output, y)
 
-    def compute_epoch_acc(self, epoch_stats):
-        n = 0
-        correct_predictions = 0
-        for minibatch_stats in epoch_stats:
-            correct_predictions += minibatch_stats['correct_predictions']
-            n += minibatch_stats['minibatch_size']
-        acc = correct_predictions / n
-        return acc
+    def print_epoch_performance(self, epoch, train_epoch_stats, eval_epoch_stats):
+        train_loss = self.state.train_loss
+        eval_loss = self.state.eval_loss
 
-    def print_epoch_performance(self, epoch, elapsed_time,
-                                train_epoch_stats, eval_epoch_stats):
-        train_loss = self.compute_epoch_loss(train_epoch_stats)
-        train_acc = self.compute_epoch_acc(train_epoch_stats)
+        train_acc = self.state.train_acc
+        eval_acc = self.state.eval_acc
 
-        eval_loss = self.compute_epoch_loss(eval_epoch_stats)
-        eval_acc = self.compute_epoch_acc(eval_epoch_stats)
+        elapsed_time = self.state.general.elapsed_time
+
         s = ('(Epoch #{}) Train loss {:.3f} & acc {:.2f}'
              ' | Eval loss {:.4f} & acc {:.2f} ({:.2f} s)')
 
@@ -43,7 +39,7 @@ class BasicClassificationTrainer(GenericTrainer):
         print(s)
 
     def update_best_model(self, best_model, eval_epoch_stats):
-        eval_acc = self.compute_epoch_acc(eval_epoch_stats)
+        eval_acc = self.state.eval_acc
         if best_model is None or eval_acc < best_model['acc']:
             best_model = {}
             best_model['acc'] = eval_acc
@@ -60,5 +56,5 @@ class BasicClassificationTrainer(GenericTrainer):
         d = super().compute_minibatch_statistics(X, y, output, loss)
         correct = self.compute_correct_preds(output, y)
         batch_size = X.size(0)
-        d.update({'correct_predictions': correct, 'minibatch_size': batch_size})
+        d.update({'correct_predictions': correct, 'size': batch_size})
         return d

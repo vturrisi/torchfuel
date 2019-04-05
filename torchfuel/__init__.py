@@ -1,1 +1,1 @@
-__all__ = ['friedman', 'nemenyi', 'utils']
+name = "torchfuel"

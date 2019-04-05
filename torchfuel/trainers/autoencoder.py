@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torchfuel.trainers.generic import GenericTrainer
 
 
-class BasicAutoencoderTrainer(GenericTrainer):
+class AutoencoderTrainer(GenericTrainer):
     def __init__(self, device, model, optimiser, scheduler,
                  model_name='model.pt', print_perf=True):
         super().__init__(

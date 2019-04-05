@@ -11,7 +11,7 @@ class ImageDataLoader:
                  batch_size=64,
                  shuffle=True,
                  num_workers=4,
-                 imagenet_format=True,
+                 imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
                  apply_transforms_to_eval: bool = False,
                  dataset_class: Dataset = datasets.ImageFolder):
@@ -111,7 +111,7 @@ class ImageToImageDataLoader(ImageDataLoader):
                  batch_size=64,
                  shuffle=True,
                  num_workers=4,
-                 imagenet_format=True,
+                 imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
                  apply_transforms_to_eval: bool = False):
 

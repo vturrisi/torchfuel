@@ -10,7 +10,7 @@ from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
-from torchfuel.trainers.autoencoder import BasicAutoencoderTrainer
+from torchfuel.trainers.autoencoder import AutoencoderTrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
 
@@ -67,7 +67,7 @@ optimiser = optim.Adam(model.parameters(), lr=0.01)
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
-trainer = BasicAutoencoderTrainer(
+trainer = AutoencoderTrainer(
     device,
     model,
     optimiser,
