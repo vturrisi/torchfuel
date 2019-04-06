@@ -21,15 +21,13 @@ class AutoEncoder(nn.Module):
         self.encoder = nn.Sequential(
             # 56x56
             Flatten(),
-            nn.Linear(56 * 56 * 3, 200),
-            nn.Linear(200, 50),
+            nn.Linear(56 * 56 * 3, 50),
             nn.BatchNorm1d(50),
             nn.ReLU(),
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(50, 200),
-            nn.Linear(200, 56 * 56 * 3),
+            nn.Linear(50, 56 * 56 * 3),
             nn.Sigmoid(),
             ReshapeToImg(),
         )

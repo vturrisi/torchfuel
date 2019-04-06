@@ -14,7 +14,7 @@ from torchfuel.trainers.generic_hooks import (compute_epoch_time,
                                               log_start_time,
                                               step_on_plateau_scheduler,
                                               step_scheduler)
-from torchfuel.trainers.metrics import compute_epoch_loss
+from torchfuel.trainers.metrics import compute_minibatch_loss, compute_epoch_loss
 from torchfuel.trainers.state import State
 from torchfuel.utils.time_parser import parse_seconds
 
@@ -30,14 +30,18 @@ class GenericTrainer:
 
         self.state = State()
 
-        self._hooks = {c: list() for c in [const.AFTER_EPOCH, const.BEFORE_EPOCH,
-                                           const.AFTER_MINIBATCH, const.BEFORE_MINIBATCH,
-                                           const.AFTER_TRAIN, const.BEFORE_TRAIN,
-                                           const.AFTER_EVAL, const.BEFORE_EVAL]}
+        self._hooks = {c: list() for c in [const.BEFORE_EPOCH, const.AFTER_EPOCH,
+                                           const.BEFORE_MINIBATCH, const.AFTER_MINIBATCH,
+                                           const.BEFORE_TRAIN_MINIBATCH, const.AFTER_TRAIN_MINIBATCH,
+                                           const.BEFORE_EVAL_MINIBATCH, const.AFTER_EVAL_MINIBATCH,
+                                           const.BEFORE_TRAIN, const.AFTER_TRAIN,
+                                           const.BEFORE_EVAL, const.AFTER_EVAL
+                                           ]}
 
         self._add_hook(log_start_time, const.BEFORE_EPOCH)
         self._add_hook(compute_epoch_loss, const.AFTER_EPOCH)
         self._add_hook(compute_epoch_time, const.AFTER_EPOCH)
+        self._add_hook(compute_minibatch_loss, const.AFTER_MINIBATCH)
 
         self.print_perf = print_perf
         if print_perf:
@@ -74,13 +78,10 @@ class GenericTrainer:
         else:
             raise ValueError('Hook {} does not exists'.format(where))
 
-    def compute_minibatch_statistics(self, X, y, output, loss):
-        return {'loss': loss}
-
     def print_epoch_performance(self, epoch, train_epoch_stats, eval_epoch_stats):
         train_loss = self.state.train_loss
         eval_loss = self.state.eval_loss
-        elapsed_time = self.state.general.elapsed_time
+        elapsed_time = self.state.elapsed_time
 
         s = ('(Epoch #{}) Train loss {:.3f}'
              ' | Eval loss {:.4f} ({:.2f} s)')
@@ -130,8 +131,26 @@ class GenericTrainer:
             X = X.to(self.device)
             y = y.to(self.device)
 
+            self.state.current_minibatch_stats = {}
+            self.state.current_minibatch = {
+                'X': X,
+                'y': y
+            }
+
+            self.run_hooks(const.BEFORE_MINIBATCH)
+            self.run_hooks(const.BEFORE_TRAIN_MINIBATCH)
+
             output, loss = self.train_minibatch(X, y)
-            minibatch_stats = self.compute_minibatch_statistics(X, y, output, loss)
+
+            self.state.current_minibatch.update({
+                'output': output,
+                'loss': loss,
+            })
+
+            self.run_hooks(const.AFTER_MINIBATCH)
+            self.run_hooks(const.AFTER_TRAIN_MINIBATCH)
+
+            minibatch_stats = self.state.current_minibatch_stats
             self.state.train.minibatch_stats.append(minibatch_stats)
 
     def eval_epoch(self, dataloader, epoch):
@@ -145,8 +164,26 @@ class GenericTrainer:
                 X = X.to(self.device)
                 y = y.to(self.device)
 
+                self.state.current_minibatch_stats = {}
+                self.state.current_minibatch = {
+                    'X': X,
+                    'y': y
+                }
+
+                self.run_hooks(const.BEFORE_MINIBATCH)
+                self.run_hooks(const.BEFORE_EVAL_MINIBATCH)
+
                 output, loss = self.eval_minibatch(X, y)
-                minibatch_stats = self.compute_minibatch_statistics(X, y, output, loss)
+
+                self.state.current_minibatch.update({
+                    'output': output,
+                    'loss': loss,
+                })
+
+                self.run_hooks(const.AFTER_MINIBATCH)
+                self.run_hooks(const.AFTER_EVAL_MINIBATCH)
+
+                minibatch_stats = self.state.current_minibatch_stats
                 self.state.eval.minibatch_stats.append(minibatch_stats)
 
     def save_model(self, epoch, best_model):
@@ -204,7 +241,7 @@ class GenericTrainer:
                 self.save_model(epoch, best_model)
 
         end_time = time.time()
-        elapsed_time = end_time - self.state.general.start_time
+        elapsed_time = end_time - self.state.start_time
         days, hours, minutes, seconds = parse_seconds(elapsed_time)
         print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
 

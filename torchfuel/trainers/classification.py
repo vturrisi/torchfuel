@@ -3,12 +3,15 @@ import torch.nn.functional as F
 
 import torchfuel.trainers.const as const
 from torchfuel.trainers.generic import GenericTrainer
-from torchfuel.trainers.metrics import compute_epoch_acc
+from torchfuel.trainers.metrics import (compute_epoch_acc,
+                                        compute_minibatch_cm,
+                                        compute_minibatch_correct_preds)
 
 
 class ClassificationTrainer(GenericTrainer):
     def __init__(self, device, model, optimiser, scheduler,
-                 model_name='model.pt', print_perf=True):
+                 model_name='model.pt', print_perf=True,
+                 n_classes=None, compute_confusion_matrix=False):
         super().__init__(
             device,
             model,
@@ -19,6 +22,13 @@ class ClassificationTrainer(GenericTrainer):
         )
 
         self._add_hook(compute_epoch_acc, const.AFTER_EPOCH)
+        self._add_hook(compute_minibatch_correct_preds, const.AFTER_MINIBATCH)
+
+        self.compute_confusion_matrix = compute_confusion_matrix
+        if compute_confusion_matrix:
+            assert n_classes is not None
+            self.n_classes = n_classes
+            self._add_hook(compute_minibatch_cm, const.AFTER_MINIBATCH)
 
     def compute_loss(self, output, y):
         return F.cross_entropy(output, y)
@@ -30,7 +40,7 @@ class ClassificationTrainer(GenericTrainer):
         train_acc = self.state.train_acc
         eval_acc = self.state.eval_acc
 
-        elapsed_time = self.state.general.elapsed_time
+        elapsed_time = self.state.elapsed_time
 
         s = ('(Epoch #{}) Train loss {:.3f} & acc {:.2f}'
              ' | Eval loss {:.4f} & acc {:.2f} ({:.2f} s)')
@@ -47,15 +57,3 @@ class ClassificationTrainer(GenericTrainer):
             best_model['model'] = self.model.state_dict()
 
         return best_model
-
-    def compute_correct_preds(self, output, y):
-        _, pred = torch.max(output, 1)
-        correct = torch.sum(pred == y).item()
-        return correct
-
-    def compute_minibatch_statistics(self, X, y, output, loss):
-        d = super().compute_minibatch_statistics(X, y, output, loss)
-        correct = self.compute_correct_preds(output, y)
-        batch_size = X.size(0)
-        d.update({'correct_predictions': correct, 'size': batch_size})
-        return d

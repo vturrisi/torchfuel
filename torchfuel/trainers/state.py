@@ -31,6 +31,5 @@ class Placeholder:
 
 class State:
     def __init__(self):
-        self.general = Placeholder()
         self.train = Placeholder()
         self.eval = Placeholder()
