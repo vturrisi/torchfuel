@@ -1,9 +1,10 @@
 import torch
 import torch.nn.functional as F
 
-from torchfuel.trainers.generic import GenericTrainer
 import torchfuel.trainers.const as const
+from torchfuel.trainers.generic import GenericTrainer
 from torchfuel.trainers.metrics import compute_epoch_acc
+
 
 class ClassificationTrainer(GenericTrainer):
     def __init__(self, device, model, optimiser, scheduler,
@@ -17,7 +18,7 @@ class ClassificationTrainer(GenericTrainer):
             print_perf=print_perf
         )
 
-        self._hooks[const.AFTER_EPOCH].append(compute_epoch_acc)
+        self._add_hook(compute_epoch_acc, const.AFTER_EPOCH)
 
     def compute_loss(self, output, y):
         return F.cross_entropy(output, y)
@@ -38,7 +39,7 @@ class ClassificationTrainer(GenericTrainer):
                      eval_loss, eval_acc, elapsed_time)
         print(s)
 
-    def update_best_model(self, best_model, eval_epoch_stats):
+    def _update_best_model(self, best_model, eval_epoch_stats):
         eval_acc = self.state.eval_acc
         if best_model is None or eval_acc < best_model['acc']:
             best_model = {}

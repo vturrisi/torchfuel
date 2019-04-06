@@ -10,7 +10,7 @@ from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
-from torchfuel.trainers.autoencoder import AutoencoderTrainer
+from torchfuel.trainers.mse_trainer import MSETrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
 
@@ -21,13 +21,15 @@ class AutoEncoder(nn.Module):
         self.encoder = nn.Sequential(
             # 56x56
             Flatten(),
-            nn.Linear(56 * 56 * 3, 50),
+            nn.Linear(56 * 56 * 3, 200),
+            nn.Linear(200, 50),
             nn.BatchNorm1d(50),
             nn.ReLU(),
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(50, 56 * 56 * 3),
+            nn.Linear(50, 200),
+            nn.Linear(200, 56 * 56 * 3),
             nn.Sigmoid(),
             ReshapeToImg(),
         )
@@ -38,8 +40,8 @@ class AutoEncoder(nn.Module):
         return x
 
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 dl = ImageToImageDataLoader(
     train_data_folder='imgs/train',
@@ -67,7 +69,7 @@ optimiser = optim.Adam(model.parameters(), lr=0.01)
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
-trainer = AutoencoderTrainer(
+trainer = MSETrainer(
     device,
     model,
     optimiser,

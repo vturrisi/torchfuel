@@ -49,14 +49,17 @@ dl = ImageDataLoader(
     train_data_folder='imgs/train',
     eval_data_folder='imgs/eval',
     pil_transformations=[transforms.RandomHorizontalFlip(),
-                         transforms.RandomVerticalFlip()]
+                         transforms.RandomVerticalFlip()],
+    batch_size=16,
+    imagenet_format=True,
 )
 
 train_dataloader, eval_dataloader, n_classes = dl.prepare()
 
 epochs = 10
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 resnet = models.resnet18(pretrained=True).to(device)
 model = ResnetWithCAM(resnet, n_classes).to(device)

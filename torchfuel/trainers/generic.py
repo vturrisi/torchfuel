@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from tqdm import tqdm
+
 import torchfuel.trainers.const as const
 from torchfuel.trainers.generic_hooks import (compute_epoch_time,
                                               log_start_time,
@@ -15,12 +17,10 @@ from torchfuel.trainers.generic_hooks import (compute_epoch_time,
 from torchfuel.trainers.metrics import compute_epoch_loss
 from torchfuel.trainers.state import State
 from torchfuel.utils.time_parser import parse_seconds
-from tqdm import tqdm
 
 
 class GenericTrainer:
     def __init__(self, device, model, optimiser, scheduler,
-                 post_epoch_hooks=None,
                  model_name='model.pt', print_perf=True):
         self.device = device
         self.model = model
@@ -35,35 +35,41 @@ class GenericTrainer:
                                            const.AFTER_TRAIN, const.BEFORE_TRAIN,
                                            const.AFTER_EVAL, const.BEFORE_EVAL]}
 
-        self._hooks[const.BEFORE_EPOCH].append(log_start_time)
-        self._hooks[const.AFTER_EPOCH].append(compute_epoch_loss)
-        self._hooks[const.AFTER_EPOCH].append(compute_epoch_time)
+        self._add_hook(log_start_time, const.BEFORE_EPOCH)
+        self._add_hook(compute_epoch_loss, const.AFTER_EPOCH)
+        self._add_hook(compute_epoch_time, const.AFTER_EPOCH)
 
         self.print_perf = print_perf
         if print_perf:
             self.print_template = ()
 
         if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
-            self._hooks[const.AFTER_EPOCH].append(step_on_plateau_scheduler)
+            self._add_hook(step_on_plateau_scheduler, const.AFTER_EPOCH)
         else:
-            self._hooks[const.BEFORE_EPOCH].append(step_scheduler)
+            self._add_hook(step_scheduler, const.BEFORE_EPOCH)
 
     @abstractmethod
     def compute_loss(self, output, y):
         pass
 
-    def execute_on(self, where):
+    def execute_on(self, where, every_n_epochs=1):
         def wrapper(func):
             if where in self._hooks:
-                self._hooks[where].append(func)
+                self._hooks[where].append((every_n_epochs, func))
             else:
                 raise ValueError('Hook {} does not exists'.format(where))
             return func
         return wrapper
 
+    def _add_hook(self, func, where, every_n_epochs=1):
+        if where in self._hooks:
+            self._hooks[where].append((every_n_epochs, func))
+        else:
+            raise ValueError('Hook {} does not exists'.format(where))
+
     def run_hooks(self, where):
         if where in self._hooks:
-            for hook in self._hooks[where]:
+            for every, hook in self._hooks[where]:
                 hook(self)
         else:
             raise ValueError('Hook {} does not exists'.format(where))
@@ -83,7 +89,7 @@ class GenericTrainer:
                      eval_loss, elapsed_time)
         print(s)
 
-    def update_best_model(self, best_model, eval_epoch_stats):
+    def _update_best_model(self, best_model, eval_epoch_stats):
         eval_loss = self.state.eval_loss
         if best_model is None or eval_loss < best_model['loss']:
             best_model = {}
@@ -166,35 +172,30 @@ class GenericTrainer:
     def fit(self, epochs, train_dataloader, eval_dataloader):
         try:
             start_epoch, best_model = self.load_model()
-            # file does not exist or pytorch error (model architecture changed)
+        # model changed
+        except RuntimeError:
+            raise
+        # model does not exists
         except:
             start_epoch = 0
             best_model = None
 
         for epoch in range(start_epoch, epochs):
-            # run hooks before epoch
             self.run_hooks(const.BEFORE_EPOCH)
 
-            # run hooks before train
+            # train step
             self.run_hooks(const.BEFORE_TRAIN)
-
             train_epoch_stats = self.train_epoch(train_dataloader, epoch)
-
-            # run hooks after train
             self.run_hooks(const.AFTER_TRAIN)
 
-            # run hooks before eval
+            # eval step
             self.run_hooks(const.BEFORE_EVAL)
-
             eval_epoch_stats = self.eval_epoch(eval_dataloader, epoch)
-
-            # run hooks after eval
             self.run_hooks(const.AFTER_EVAL)
 
-            # run hooks after epoch
             self.run_hooks(const.AFTER_EPOCH)
 
-            best_model = self.update_best_model(best_model, eval_epoch_stats)
+            best_model = self._update_best_model(best_model, eval_epoch_stats)
 
             if self.print_perf:
                 self.print_epoch_performance(epoch, train_epoch_stats, eval_epoch_stats)
