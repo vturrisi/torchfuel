@@ -22,6 +22,7 @@ class ClassificationTrainer(GenericTrainer):
         - scheduler: learning rate scheduler
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
+
     """
 
     def __init__(self,
@@ -33,6 +34,7 @@ class ClassificationTrainer(GenericTrainer):
                  print_perf: bool = True,
                  n_classes: bool = None,
                  compute_confusion_matrix: bool = False):
+
         super().__init__(
             device,
             model,
@@ -59,7 +61,9 @@ class ClassificationTrainer(GenericTrainer):
         Args:
             - output: model output
             - y: real y
+
         """
+
         return F.cross_entropy(output, y)
 
     def print_epoch_performance(self):
@@ -69,6 +73,7 @@ class ClassificationTrainer(GenericTrainer):
         This includes: epoch number, train/eval losses, elapsed time and train/eval accuracies.
 
         """
+
         epoch = self.state.current_epoch
         train_loss = self.state.train_loss
         eval_loss = self.state.eval_loss

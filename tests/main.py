@@ -51,7 +51,7 @@ dl = ImageDataLoader(
 
 train_dataloader, eval_dataloader, n_classes = dl.prepare()
 
-epochs = 10
+epochs = 1
 
 # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')

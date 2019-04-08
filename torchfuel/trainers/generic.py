@@ -44,7 +44,6 @@ class GenericTrainer:
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
 
-
     """
 
     def __init__(self,
@@ -95,6 +94,7 @@ class GenericTrainer:
         Args:
             - output: model output
             - y: real y
+
         """
 
         pass
@@ -117,6 +117,7 @@ class GenericTrainer:
             - func: function. First and only argument should be the trainer
             - where: event to trigger the function's execution (use the values defined in const.py)
             - every_n_epochs: number of epochs between executions
+
         """
 
         def wrapper(func: typing.Callable):
@@ -145,6 +146,7 @@ class GenericTrainer:
             - func: function. First and only argument should be the trainer
             - where: event to trigger the function's execution (use the values defined in const.py)
             - every_n_epochs: number of epochs between executions
+
         """
 
         if where in self._hooks:

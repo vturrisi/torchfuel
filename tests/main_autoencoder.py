@@ -59,7 +59,7 @@ dl2 = ImageToImageDataLoader(
 
 train_dataloader, eval_dataloader = dl.prepare()
 
-epochs = 10
+epochs = 1
 
 model = AutoEncoder().to(device)
 
