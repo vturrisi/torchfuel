@@ -42,16 +42,16 @@ class AutoEncoder(nn.Module):
 device = torch.device('cpu')
 
 dl = ImageToImageDataLoader(
-    train_data_folder='imgs/train',
-    eval_data_folder='imgs/eval',
+    train_data_folder='tests/imgs/train',
+    eval_data_folder='tests/imgs/eval',
     tensor_transformations=[],
     size=56,
     imagenet_format=False
 )
 
 dl2 = ImageToImageDataLoader(
-    train_data_folder='imgs/train',
-    eval_data_folder='imgs/eval',
+    train_data_folder='tests/imgs/train',
+    eval_data_folder='tests/imgs/eval',
     tensor_transformations=[GaussianNoiser(noise_amount=0.10)],
     size=56,
     imagenet_format=False

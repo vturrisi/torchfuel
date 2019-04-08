@@ -1,32 +1,26 @@
 language: python
 
 python:
-    - "3.5"
     - "3.6"
-    - "3.7"
 
 install:
-    - pip install codecov pytest-cov
-    - pip install -r requirements
+    - pip install mypy
+    - pip install codecov
+    - pip install pytest-cov
+    - python setup.py install
 
 env:
     global:
-        - SOURCE_FILES=`find ./pymfe/ -name '*.py'`
-        - TEST_FILES=./tests/
+        - SOURCE_FILES=`find ./torchfuel/ -name '*.py'`
 
-# Disabled messages in Pylint
-#     C0103: Argument name "example" doesn't conform to snake_case naming style
-#     R0913: Too many arguments
-#     R0902: Too many instance attributes
-#     R0914: Too many local variables
-#     C0302: Too many lines in module
-#     R0904: Too many public methods
-#     R0801: Similar lines in "x" files
-#     E1101: Module 'patsy' has no 'dmatrix' member (need to be fixed?)
-#
 script:
     - mypy $SOURCE_FILES --ignore-missing-imports
-    - pytest tests/ --showlocals -v --cov=pymfe/
+    - pytest tests/ --cov=torchfuel
+
+notifications:
+    email:
+        on_success: never
+        on_failure: never
 
 after_success:
   - codecov

@@ -41,8 +41,8 @@ class ResnetWithCAM(nn.Module):
 
 
 dl = ImageDataLoader(
-    train_data_folder='imgs/train',
-    eval_data_folder='imgs/eval',
+    train_data_folder='tests/imgs/train',
+    eval_data_folder='tests/imgs/eval',
     pil_transformations=[transforms.RandomHorizontalFlip(),
                          transforms.RandomVerticalFlip()],
     batch_size=16,

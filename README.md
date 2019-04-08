@@ -1,4 +1,6 @@
 # torchfuel
+[![Build Status](https://travis-ci.org/vturrisi/torchfuel.svg?branch=master)](https://travis-ci.org/vturrisi/torchfuel)
+[![codecov](https://codecov.io/gh/vturrisi/torchfuel/branch/master/graph/badge.svg)](https://codecov.io/gh/vturrisi/torchfuel)
 
 Build on top of pytorch to fuel productivity.
 
@@ -59,7 +61,7 @@ Clone repository and run:
 pip install .
 ```
 
-Optionally: 
+Optionally:
 ```bash
 pip install torchfuel
 ```

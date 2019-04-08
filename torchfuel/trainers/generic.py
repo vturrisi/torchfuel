@@ -10,7 +10,7 @@ import torch.optim as optim
 from tqdm import tqdm
 
 import torchfuel.trainers.const as const
-from torchfuel.trainers.generic_hooks import (compute_epoch_time,
+from torchfuel.trainers.hooks.generic import (compute_epoch_time,
                                               log_start_time,
                                               step_on_plateau_scheduler,
                                               step_scheduler)
@@ -72,13 +72,13 @@ class GenericTrainer:
             const.BEFORE_TRAIN, const.AFTER_TRAIN,
             const.BEFORE_EVAL, const.AFTER_EVAL
         ]
-        self._hooks = {e: list() for e in events}
+        self._hooks: typing.Dict[const.Event, list] = {e: list() for e in events}
 
         # adds basic hooks to compute elapsed time and losses
         self.add_hook(log_start_time, const.BEFORE_EPOCH)
+        self.add_hook(compute_minibatch_loss, const.AFTER_MINIBATCH)
         self.add_hook(compute_epoch_loss, const.AFTER_EPOCH)
         self.add_hook(compute_epoch_time, const.AFTER_EPOCH)
-        self.add_hook(compute_minibatch_loss, const.AFTER_MINIBATCH)
 
         if scheduler is not None:
             if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
@@ -324,6 +324,8 @@ class GenericTrainer:
             start_epoch = 0
             best_model = None
 
+        start_time = time.time()
+
         for epoch in range(start_epoch, epochs):
             self.state.current_epoch = epoch
 
@@ -350,7 +352,7 @@ class GenericTrainer:
                 self.save_model(best_model)
 
         end_time = time.time()
-        elapsed_time = end_time - self.state.start_time
+        elapsed_time = end_time - start_time
         days, hours, minutes, seconds = parse_seconds(elapsed_time)
         print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
 
