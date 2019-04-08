@@ -1,7 +1,8 @@
 import pickle
 import time
-from abc import abstractmethod
 import typing
+from abc import abstractmethod
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,7 +14,8 @@ from torchfuel.trainers.generic_hooks import (compute_epoch_time,
                                               log_start_time,
                                               step_on_plateau_scheduler,
                                               step_scheduler)
-from torchfuel.trainers.metrics import compute_minibatch_loss, compute_epoch_loss
+from torchfuel.trainers.hooks.metrics import (compute_epoch_loss,
+                                              compute_minibatch_loss)
 from torchfuel.trainers.state import State
 from torchfuel.utils.time_parser import parse_seconds
 
@@ -169,7 +171,7 @@ class GenericTrainer:
         """
         Prints the performance of the last epoch.
         Should be overwritten to allow for prettier (or more complex) prints.
-        This basic value only prints the epoch number, train/eval losses and elapsed time.
+        This base function only prints the epoch number, train/eval losses and elapsed time.
 
         """
 
@@ -185,7 +187,14 @@ class GenericTrainer:
                      eval_loss, elapsed_time)
         print(s)
 
-    def _update_best_model(self, best_model):
+    def update_best_model(self, best_model):
+        """
+        Updates best model using best_model['loss'].
+        This is automatically called every epoch.
+        Should be overwritten to allow for other comparisons, e.g., using accuracy.
+
+        """
+
         eval_loss = self.state.eval_loss
         if best_model is None or eval_loss < best_model['loss']:
             best_model = {}
@@ -216,12 +225,12 @@ class GenericTrainer:
         output = output.detach()
         return output, total_loss
 
-    def train_epoch(self, dataloader, epoch):
-        self.model.train()
-
+    def train_epoch(self, dataloader):
+        epoch = self.state.current_epoch
         msg = 'Training (epoch {})'.format(epoch)
         self.state.train.minibatch_stats = []
 
+        self.model.train()
         for X, y in tqdm(dataloader, desc=msg, leave=False):
             X = X.to(self.device)
             y = y.to(self.device)
@@ -248,12 +257,12 @@ class GenericTrainer:
             minibatch_stats = self.state.current_minibatch_stats
             self.state.train.minibatch_stats.append(minibatch_stats)
 
-    def eval_epoch(self, dataloader, epoch):
-        self.model.eval()
-
+    def eval_epoch(self, dataloader):
+        epoch = self.state.current_epoch
         msg = 'Evaluating (epoch {})'.format(epoch)
         self.state.eval.minibatch_stats = []
 
+        self.model.eval()
         with torch.set_grad_enabled(False):
             for X, y in tqdm(dataloader, desc=msg, leave=False):
                 X = X.to(self.device)
@@ -320,17 +329,17 @@ class GenericTrainer:
 
             # train step
             self._run_hooks(const.BEFORE_TRAIN)
-            self.train_epoch(train_dataloader, epoch)
+            self.train_epoch(train_dataloader)
             self._run_hooks(const.AFTER_TRAIN)
 
             # eval step
             self._run_hooks(const.BEFORE_EVAL)
-            self.eval_epoch(eval_dataloader, epoch)
+            self.eval_epoch(eval_dataloader)
             self._run_hooks(const.AFTER_EVAL)
 
             self._run_hooks(const.AFTER_EPOCH)
 
-            best_model = self._update_best_model(best_model)
+            best_model = self.update_best_model(best_model)
 
             if self.print_perf:
                 self.print_epoch_performance()
