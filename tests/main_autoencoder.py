@@ -29,7 +29,7 @@ class AutoEncoder(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(50, 56 * 56 * 3),
             nn.Sigmoid(),
-            ReshapeToImg(),
+            ReshapeToImg(3, 56, 56),
         )
 
     def forward(self, x):

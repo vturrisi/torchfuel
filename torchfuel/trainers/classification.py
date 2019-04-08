@@ -1,5 +1,7 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 
 import torchfuel.trainers.const as const
 from torchfuel.trainers.generic import GenericTrainer
@@ -9,9 +11,15 @@ from torchfuel.trainers.metrics import (compute_epoch_acc,
 
 
 class ClassificationTrainer(GenericTrainer):
-    def __init__(self, device, model, optimiser, scheduler,
-                 model_name='model.pt', print_perf=True,
-                 n_classes=None, compute_confusion_matrix=False):
+    def __init__(self,
+                 device: torch.device,
+                 model: nn.Module,
+                 optimiser: optim.Optimizer,
+                 scheduler: optim.lr_scheduler._LRScheduler = None,
+                 model_name: str = 'model.pt',
+                 print_perf: bool = True,
+                 n_classes: bool = None,
+                 compute_confusion_matrix: bool = False):
         super().__init__(
             device,
             model,
@@ -21,26 +29,26 @@ class ClassificationTrainer(GenericTrainer):
             print_perf=print_perf
         )
 
-        self._add_hook(compute_epoch_acc, const.AFTER_EPOCH)
-        self._add_hook(compute_minibatch_correct_preds, const.AFTER_MINIBATCH)
+        self.add_hook(compute_epoch_acc, const.AFTER_EPOCH)
+        self.add_hook(compute_minibatch_correct_preds, const.AFTER_MINIBATCH)
 
         self.compute_confusion_matrix = compute_confusion_matrix
         if compute_confusion_matrix:
             assert n_classes is not None
             self.n_classes = n_classes
-            self._add_hook(compute_minibatch_cm, const.AFTER_MINIBATCH)
+            self.add_hook(compute_minibatch_cm, const.AFTER_MINIBATCH)
 
     def compute_loss(self, output, y):
         return F.cross_entropy(output, y)
 
-    def print_epoch_performance(self, epoch, train_epoch_stats, eval_epoch_stats):
+    def print_epoch_performance(self):
+        epoch = self.state.current_epoch
         train_loss = self.state.train_loss
         eval_loss = self.state.eval_loss
+        elapsed_time = self.state.elapsed_time
 
         train_acc = self.state.train_acc
         eval_acc = self.state.eval_acc
-
-        elapsed_time = self.state.elapsed_time
 
         s = ('(Epoch #{}) Train loss {:.3f} & acc {:.2f}'
              ' | Eval loss {:.4f} & acc {:.2f} ({:.2f} s)')
@@ -49,7 +57,7 @@ class ClassificationTrainer(GenericTrainer):
                      eval_loss, eval_acc, elapsed_time)
         print(s)
 
-    def _update_best_model(self, best_model, eval_epoch_stats):
+    def _update_best_model(self, best_model):
         eval_acc = self.state.eval_acc
         if best_model is None or eval_acc > best_model['acc']:
             best_model = {}
