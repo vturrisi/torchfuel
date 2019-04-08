@@ -15,7 +15,11 @@ env:
 
 script:
     - mypy $SOURCE_FILES --ignore-missing-imports
+<<<<<<< HEAD
     - pytest tests/ --cov=torchfuel
+=======
+    - pytest tests/
+>>>>>>> 2ea5b39... added pytest back to travis
 
 notifications:
     email:
