@@ -10,7 +10,7 @@ from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
-from torchfuel.trainers.mse_trainer import MSETrainer
+from torchfuel.trainers.mse import MSETrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
 

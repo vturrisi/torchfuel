@@ -10,12 +10,7 @@ from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageDataLoader
 from torchfuel.trainers.classification import ClassificationTrainer
-
-
-class Flatten(nn.Module):
-    def forward(self, imgs):
-        size = imgs.size(1)
-        return imgs.view(-1, size)
+from torchfuel.layers.utils import Flatten
 
 
 class ResnetWithCAM(nn.Module):
