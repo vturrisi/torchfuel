@@ -51,7 +51,7 @@ class ClassificationTrainer(GenericTrainer):
 
     def _update_best_model(self, best_model, eval_epoch_stats):
         eval_acc = self.state.eval_acc
-        if best_model is None or eval_acc < best_model['acc']:
+        if best_model is None or eval_acc > best_model['acc']:
             best_model = {}
             best_model['acc'] = eval_acc
             best_model['model'] = self.model.state_dict()

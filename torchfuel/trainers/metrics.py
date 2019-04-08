@@ -67,5 +67,3 @@ def compute_epoch_acc(trainer):
 
     trainer.state.train_acc = train_acc
     trainer.state.eval_acc = eval_acc
-
-
