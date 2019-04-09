@@ -13,7 +13,8 @@ class ImageDataLoader:
                  num_workers=4,
                  imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
-                 apply_transforms_to_eval: bool = False,
+                 apply_pil_transforms_to_eval: bool = False,
+                 apply_tensor_transforms_to_eval: bool = False,
                  dataset_class: Dataset = datasets.ImageFolder):
 
         if pil_transformations is None:
@@ -33,7 +34,8 @@ class ImageDataLoader:
         self.size = size
         self.mean = mean
         self.std = std
-        self.apply_transforms_to_eval = apply_transforms_to_eval
+        self.apply_pil_transforms_to_eval = apply_pil_transforms_to_eval
+        self.apply_tensor_transforms_to_eval = apply_tensor_transforms_to_eval
 
         self.dataset_class = dataset_class
 
@@ -49,34 +51,43 @@ class ImageDataLoader:
             size = self.size
             mean = self.mean
             std = self.std
-            normalise = False
+            normalise = True
         elif self.size is not None:
             size = self.size
             normalise = False
         else:
             raise Exception('imagenet_format should be True or size must be specified')
 
-        t = [
+        # train transforms
+        train_t = [
             transforms.Resize(size),
             *self.pil_transformations,
             transforms.ToTensor(),
         ]
         if normalise:
-            t.append(transforms.Normalize(mean, std))
-        t.extend(self.tensor_transformations)
+            train_t.append(transforms.Normalize(mean, std))
+        train_t.extend(self.tensor_transformations)
 
-        train_transforms = transforms.Compose(t)
+        train_transforms = transforms.Compose(train_t)
 
-        if self.apply_transforms_to_eval:
-            eval_transforms = train_transforms
+        if self.apply_pil_transforms_to_eval:
+            test_t = [
+                transforms.Resize(size),
+                *self.pil_transformations,
+                transforms.ToTensor(),
+            ]
         else:
-            t = [
+            test_t = [
                 transforms.Resize(size),
                 transforms.ToTensor(),
             ]
-            if normalise:
-                t.append(transforms.Normalize(mean, std))
-            eval_transforms = transforms.Compose(t)
+        if normalise:
+            test_t.append(transforms.Normalize(mean, std))
+
+        if self.apply_tensor_transforms_to_eval:
+            test_t.extend(self.tensor_transformations)
+
+        eval_transforms = transforms.Compose(test_t)
 
         data_transforms = {
             'train': train_transforms,

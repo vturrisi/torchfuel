@@ -7,4 +7,3 @@ def test_classification():
 
 def test_autoencoder():
     assert subprocess.run('python tests/main_autoencoder.py', shell=True, check=True)
-
