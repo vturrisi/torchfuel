@@ -51,13 +51,19 @@ class GenericTrainer:
                  model: nn.Module,
                  optimiser: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler = None,
+                 checkpoint_model: bool = False,
+                 checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True):
+
+        assert checkpoint_every_n > 0
 
         self.device = device
         self.model = model
         self.optimiser = optimiser
         self.scheduler = scheduler
+        self.checkpoint_model = checkpoint_model
+        self.checkpoint_every_n = checkpoint_every_n
         self.model_name = model_name
         self.print_perf = print_perf
 
@@ -307,7 +313,6 @@ class GenericTrainer:
         self.model.load_state_dict(checkpoint['model_state'])
         self.optimiser.load_state_dict(checkpoint['optimiser_state'])
         self.scheduler.load_state_dict(checkpoint['scheduler_state'])
-
         start_epoch = checkpoint['epoch']
         best_model = checkpoint['best_model']
 
@@ -325,7 +330,6 @@ class GenericTrainer:
             best_model = None
 
         start_time = time.time()
-
         for epoch in range(start_epoch, epochs):
             self.state.current_epoch = epoch
 
@@ -348,7 +352,7 @@ class GenericTrainer:
             if self.print_perf:
                 self.print_epoch_performance()
 
-            if epoch != 0:
+            if self.checkpoint_model and epoch % self.checkpoint_every_n == 0:
                 self.save_model(best_model)
 
         end_time = time.time()

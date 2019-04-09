@@ -30,6 +30,8 @@ class ClassificationTrainer(GenericTrainer):
                  model: nn.Module,
                  optimiser: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler = None,
+                 checkpoint_model: bool = False,
+                 checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True,
                  n_classes: bool = None,
@@ -40,6 +42,8 @@ class ClassificationTrainer(GenericTrainer):
             model,
             optimiser,
             scheduler,
+            checkpoint_model=checkpoint_model,
+            checkpoint_every_n=checkpoint_every_n,
             model_name=model_name,
             print_perf=print_perf
         )
