@@ -61,7 +61,7 @@ Clone repository and run:
 pip install .
 ```
 
-Optionally:
+Optionally (not up to date):
 ```bash
 pip install torchfuel
 ```
