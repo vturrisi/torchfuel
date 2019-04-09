@@ -1,13 +1,14 @@
 import torch
+import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 from torchvision import models, transforms
 
-from torchfuel.data_loaders.image import (ImageDataLoader,
-                                          ImageToImageDataLoader)
+from torchfuel.data_loaders.image import ImageDataLoader, ImageToImageDataLoader
 from torchfuel.models.cam_resnet import CAMResnet
+from torchfuel.layers.utils import PrintLayer, ReshapeToImg, Flatten
 
 
-def test_camresnet():
+def test_util_layers():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',
         eval_data_folder='tests/imgs/eval',
@@ -17,19 +18,23 @@ def test_camresnet():
         imagenet_format=True,
     )
 
+    class UtilLayerTester(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.pl = PrintLayer()
+            self.flat = Flatten()
+            self.r2i = ReshapeToImg()
+
+        def forward(self, inp):
+            inp = self.pl(inp)
+            inp = self.flat(inp)
+            inp = self.r2i(inp)
+            return inp
+
     train_dataloader, eval_dataloader, n_classes = dl.prepare()
 
     device = torch.device('cpu')
-
-    resnet = models.resnet18(pretrained=True)
-    model = CAMResnet(resnet, n_classes).to(device)
-
-    it = iter(train_dataloader)
-    X, y = next(it)
-    assert isinstance(model(X), torch.Tensor)
-
-    resnet = models.resnet50(pretrained=True)
-    model = CAMResnet(resnet, n_classes).to(device)
+    model = UtilLayerTester().to(device)
 
     it = iter(train_dataloader)
     X, y = next(it)

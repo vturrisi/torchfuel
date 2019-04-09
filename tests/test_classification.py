@@ -35,7 +35,7 @@ def test():
     optimiser = optim.SGD([{'params': model.activations.parameters(), 'lr': 0.005},
                            {'params': model.fc_layer.parameters()}], lr=0.01, momentum=0.9)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=20)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimiser, T_max=1)
 
     epochs = 1
     errors = []
@@ -45,7 +45,9 @@ def test():
             model,
             optimiser,
             scheduler,
-            checkpoint_model=False
+            checkpoint_model=False,
+            compute_confusion_matrix=True,
+            n_classes=n_classes
         )
 
         model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)

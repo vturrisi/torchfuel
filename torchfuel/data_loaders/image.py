@@ -39,10 +39,13 @@ class ImageDataLoader:
 
         self.dataset_class = dataset_class
 
-    def prepare(self):
         if self.imagenet_format:
             assert all(v is None for v in [self.size, self.mean, self.std])
+        else:
+            assert self.size is not None, 'imagenet_format should be True or size must be specified'
 
+    def prepare(self):
+        if self.imagenet_format:
             size = 224
             mean = [0.485, 0.456, 0.406]
             std = [0.229, 0.224, 0.225]

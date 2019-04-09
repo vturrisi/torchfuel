@@ -25,8 +25,8 @@ class Placeholder:
         else:
             return super().__getattr__(name)
 
-    def pickle_safe(self, file):
-        pickle.dump(self, open(file, 'wb'))
+    def pickle_safe(self):
+        return pickle.dumps(self)
 
 
 class State:

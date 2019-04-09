@@ -29,7 +29,7 @@ def compute_minibatch_cm(trainer):
     output = data['output']
 
     _, pred = torch.max(output, 1)
-    cm = torch.tensor(trainer.n_classes, trainer.n_classes)
+    cm = torch.zeros((trainer.n_classes, trainer.n_classes))
     for p, y_ in zip(pred, y):
         cm[y_, p] += 1
     stats = trainer.state.current_minibatch_stats
@@ -67,3 +67,8 @@ def compute_epoch_acc(trainer):
 
     trainer.state.train_acc = train_acc
     trainer.state.eval_acc = eval_acc
+
+
+def compute_epoch_cm(trainer):
+    # TODO
+    pass

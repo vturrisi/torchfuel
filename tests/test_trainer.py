@@ -1,8 +1,8 @@
 import os
-import shutil
 import time
 from collections import namedtuple
 
+import pytest
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -11,6 +11,7 @@ from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
+from torchfuel.trainers.const import AFTER_EPOCH
 from torchfuel.trainers.mse import MSETrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
@@ -58,20 +59,26 @@ def test():
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
-    epochs = 10
+    epochs = 1
     trainer = MSETrainer(
         device,
         model,
         optimiser,
         scheduler,
-        checkpoint_model=True,
-        model_name='tests/autoencoder.pt'
+        checkpoint_model=False,
     )
 
-    trainer.fit(epochs, train_dataloader, eval_dataloader)
+    @trainer.execute_on(AFTER_EPOCH)
+    def dummy_function(trainer):
+        pass
 
-    trainer.epochs = 100
-    # will need to load model
-    trainer.fit(epochs, train_dataloader, eval_dataloader)
+    with pytest.raises(Exception):
+        @trainer.execute_on(1000)
+        def dummy_function(trainer):
+            pass
 
-    os.remove('tests/autoencoder.pt')
+    with pytest.raises(Exception):
+        trainer._run_hooks(1000)
+
+    with pytest.raises(Exception):
+        trainer.add_hook(dummy_function, 1000)
