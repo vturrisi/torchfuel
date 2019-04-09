@@ -9,35 +9,9 @@ from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageDataLoader
-from torchfuel.trainers.classification import ClassificationTrainer
 from torchfuel.layers.utils import Flatten
-
-
-class ResnetWithCAM(nn.Module):
-    def __init__(self, base_resnet, n_classes):
-        super().__init__()
-        self.activations = nn.Sequential(*list(base_resnet.children())[:-3])
-        last_sublayer = list(self.activations[-1][-1].children())[-1]
-        if isinstance(last_sublayer, nn.BatchNorm2d):
-            n_filters = last_sublayer.num_features
-        elif isinstance(last_sublayer, nn.Conv2d):
-            n_filters = last_sublayer.out_channels
-        else:
-            last_sublayer = list(self.activations[-1][-1].children())[-2]
-            n_filters = last_sublayer.num_features
-
-        self.gap = nn.Sequential(nn.AvgPool2d(14, 14),
-                                 Flatten())
-        self.fc_layer = nn.Linear(n_filters, n_classes, bias=False)
-
-        self.activations.requires_grad = False
-        self.gap.requires_grad = False
-
-    def forward(self, imgs):
-        output = self.activations(imgs)
-        output = self.gap(output)
-        output = self.fc_layer(output)
-        return output
+from torchfuel.models.cam_resnet import CAMResnet
+from torchfuel.trainers.classification import ClassificationTrainer
 
 
 dl = ImageDataLoader(
@@ -51,13 +25,12 @@ dl = ImageDataLoader(
 
 train_dataloader, eval_dataloader, n_classes = dl.prepare()
 
-epochs = 1
 
 # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
 
-resnet = models.resnet18(pretrained=True).to(device)
-model = ResnetWithCAM(resnet, n_classes).to(device)
+resnet = models.resnet18(pretrained=True)
+model = CAMResnet(resnet, n_classes).to(device)
 
 optimiser = optim.SGD([{'params': model.activations.parameters(), 'lr': 0.005},
                        {'params': model.fc_layer.parameters()}], lr=0.01, momentum=0.9)
@@ -66,4 +39,12 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=20)
 
 trainer = ClassificationTrainer(device, model, optimiser, scheduler)
 
+epochs = 1
 model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+error = trainer.state.train_loss
+
+epochs = 2
+model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+new_error = trainer.state.train_loss
+
+assert new_error < error

@@ -59,8 +59,6 @@ dl2 = ImageToImageDataLoader(
 
 train_dataloader, eval_dataloader = dl.prepare()
 
-epochs = 1
-
 model = AutoEncoder().to(device)
 
 optimiser = optim.Adam(model.parameters(), lr=0.01)
@@ -75,4 +73,12 @@ trainer = MSETrainer(
     model_name='autoencoder.pt'
 )
 
+
+epochs = 1
 model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+error = trainer.state.train_loss
+epochs = 2
+model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+new_error = trainer.state.train_loss
+
+assert new_error < error
