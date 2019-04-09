@@ -124,7 +124,9 @@ class ImageToImageDataLoader(ImageDataLoader):
                  num_workers=4,
                  imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
-                 apply_transforms_to_eval: bool = False):
+                 apply_pil_transforms_to_eval: bool = False,
+                 apply_tensor_transforms_to_eval: bool = False,
+                 ):
 
         super().__init__(
             train_data_folder, eval_data_folder,
@@ -137,7 +139,8 @@ class ImageToImageDataLoader(ImageDataLoader):
             size,
             mean,
             std,
-            apply_transforms_to_eval,
+            apply_pil_transforms_to_eval,
+            apply_tensor_transforms_to_eval,
             dataset_class=ImageToImageReader
         )
 
