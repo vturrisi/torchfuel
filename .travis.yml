@@ -15,7 +15,7 @@ env:
 
 script:
     - mypy $SOURCE_FILES --ignore-missing-imports
-    - pytest tests/ --showlocals -v --cov=torchfuel
+    - pytest tests/ --cov=torchfuel
 
 notifications:
     email:
