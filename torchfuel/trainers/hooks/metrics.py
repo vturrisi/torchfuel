@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 import torch
 
 
@@ -37,41 +39,65 @@ def compute_minibatch_cm(trainer):
 
 
 def compute_epoch_loss(trainer):
-    train_loss = 0
-    eval_loss = 0
+    with suppress(AttributeError):
+        train_loss = 0
+        for s in trainer.state.train.minibatch_stats:
+            train_loss += s['loss']
+        trainer.state.train_loss = train_loss
 
-    for s in trainer.state.train.minibatch_stats:
-        train_loss += s['loss']
+    with suppress(AttributeError):
+        eval_loss = 0
+        for s in trainer.state.eval.minibatch_stats:
+            eval_loss += s['loss']
+        trainer.state.eval_loss = eval_loss
 
-    for s in trainer.state.eval.minibatch_stats:
-        eval_loss += s['loss']
-
-    trainer.state.train_loss = train_loss
-    trainer.state.eval_loss = eval_loss
+    with suppress(AttributeError):
+        test_loss = 0
+        for s in trainer.state.test.minibatch_stats:
+            test_loss += s['loss']
+        trainer.state.test_loss = eval_loss
 
 
 def compute_epoch_acc(trainer):
-    n = 0
-    correct_predictions = 0
-    for s in trainer.state.train.minibatch_stats:
-        correct_predictions += s['correct_predictions']
-        n += s['size']
-    train_acc = correct_predictions / n
+    with suppress(AttributeError):
+        n = 0
+        correct_predictions = 0
+        for s in trainer.state.train.minibatch_stats:
+            correct_predictions += s['correct_predictions']
+            n += s['size']
+        train_acc = correct_predictions / n
+        trainer.state.train_acc = train_acc
 
-    n = 0
-    correct_predictions = 0
-    for s in trainer.state.eval.minibatch_stats:
-        correct_predictions += s['correct_predictions']
-        n += s['size']
-    eval_acc = correct_predictions / n
+    with suppress(AttributeError):
+        n = 0
+        correct_predictions = 0
+        for s in trainer.state.eval.minibatch_stats:
+            correct_predictions += s['correct_predictions']
+            n += s['size']
+        eval_acc = correct_predictions / n
 
-    trainer.state.train_acc = train_acc
-    trainer.state.eval_acc = eval_acc
+        trainer.state.eval_acc = eval_acc
+
+    with suppress(AttributeError):
+        n = 0
+        correct_predictions = 0
+        for s in trainer.state.test.minibatch_stats:
+            correct_predictions += s['correct_predictions']
+            n += s['size']
+        test_acc = correct_predictions / n
+
+        trainer.state.test_acc = test_acc
 
 
 def compute_epoch_cm(trainer):
-    trainer.state.train_cm = sum((s['confusion_matrix']
-                                  for s in trainer.state.train.minibatch_stats))
+    with suppress(AttributeError):
+        trainer.state.train_cm = sum((s['confusion_matrix']
+                                      for s in trainer.state.train.minibatch_stats))
 
-    trainer.state.eval_cm = sum((s['confusion_matrix']
-                                 for s in trainer.state.eval.minibatch_stats))
+    with suppress(AttributeError):
+        trainer.state.eval_cm = sum((s['confusion_matrix']
+                                     for s in trainer.state.eval.minibatch_stats))
+
+    with suppress(AttributeError):
+        trainer.state.test_cm = sum((s['confusion_matrix']
+                                     for s in trainer.state.test.minibatch_stats))

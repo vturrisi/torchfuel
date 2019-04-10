@@ -75,8 +75,10 @@ class GenericTrainer:
             const.BEFORE_MINIBATCH, const.AFTER_MINIBATCH,
             const.BEFORE_TRAIN_MINIBATCH, const.AFTER_TRAIN_MINIBATCH,
             const.BEFORE_EVAL_MINIBATCH, const.AFTER_EVAL_MINIBATCH,
+            const.BEFORE_TEST_MINIBATCH, const.AFTER_TEST_MINIBATCH,
             const.BEFORE_TRAIN, const.AFTER_TRAIN,
-            const.BEFORE_EVAL, const.AFTER_EVAL
+            const.BEFORE_EVAL, const.AFTER_EVAL,
+            const.BEFORE_TEST, const.AFTER_TEST,
         ]
         self._hooks: typing.Dict[const.Event, list] = {e: list() for e in events}
 
@@ -298,6 +300,38 @@ class GenericTrainer:
                 minibatch_stats = self.state.current_minibatch_stats
                 self.state.eval.minibatch_stats.append(minibatch_stats)
 
+    def test_epoch(self, dataloader):
+        msg = 'Testing'
+        self.state.test.minibatch_stats = []
+
+        self.model.eval()
+        with torch.set_grad_enabled(False):
+            for X, y in tqdm(dataloader, desc=msg, leave=False):
+                X = X.to(self.device)
+                y = y.to(self.device)
+
+                self.state.current_minibatch_stats = {}
+                self.state.current_minibatch = {
+                    'X': X,
+                    'y': y
+                }
+
+                self._run_hooks(const.BEFORE_MINIBATCH)
+                self._run_hooks(const.BEFORE_TEST_MINIBATCH)
+
+                output, loss = self.eval_minibatch(X, y)
+
+                self.state.current_minibatch.update({
+                    'output': output,
+                    'loss': loss,
+                })
+
+                self._run_hooks(const.AFTER_MINIBATCH)
+                self._run_hooks(const.AFTER_TEST_MINIBATCH)
+
+                minibatch_stats = self.state.current_minibatch_stats
+                self.state.test.minibatch_stats.append(minibatch_stats)
+
     def save_model(self, best_model):
         epoch = self.state.current_epoch
         torch.save({
@@ -317,6 +351,11 @@ class GenericTrainer:
         best_model = checkpoint['best_model']
 
         return start_epoch, best_model
+
+    def load_best_model(self):
+        checkpoint = torch.load(self.model_name)
+        best_model = checkpoint['best_model']['model']
+        self.model.load_state_dict(best_model)
 
     def fit(self, epochs, train_dataloader, eval_dataloader):
         try:
@@ -361,3 +400,16 @@ class GenericTrainer:
         print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
 
         return self.model.load_state_dict(best_model['model'])
+
+    def test(self, test_dataloader, load=False):
+        if load:
+            self.load_best_model()
+
+        self._run_hooks(const.BEFORE_EPOCH)
+
+        # test step
+        self._run_hooks(const.BEFORE_EVAL)
+        self.test_epoch(test_dataloader)
+        self._run_hooks(const.AFTER_EVAL)
+
+        self._run_hooks(const.AFTER_EPOCH)

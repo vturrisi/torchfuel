@@ -1,10 +1,11 @@
-from setuptools import setup, find_packages
-
-with open('requirements.txt') as f:
-    requirements = [p.strip() for p in f.readlines()]
+from setuptools import find_packages, setup
 
 with open('README.md') as f:
     long_description = f.read()
+
+
+with open('requirements.txt') as f:
+    requirements = [p.strip() for p in f.readlines()]
 
 
 setup(

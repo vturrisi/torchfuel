@@ -1,13 +1,13 @@
 import pickle
 
 
-class Placeholder:
+class Namespace:
     def __init__(self):
         self.stored_objects = {}
 
     def __repr__(self):
         arg = ','.join(self.stored_objects.keys())
-        return 'Placeholder with objects ({})'.format(arg)
+        return 'Namespace({})'.format(arg)
 
     def __setattr__(self, name, value):
         if name != 'stored_objects':
@@ -31,5 +31,9 @@ class Placeholder:
 
 class State:
     def __init__(self):
-        self.train = Placeholder()
-        self.eval = Placeholder()
+        self.train = Namespace()
+        self.eval = Namespace()
+        self.test = Namespace()
+
+    def add_namespace(self, name):
+        setattr(self, name, Namespace())

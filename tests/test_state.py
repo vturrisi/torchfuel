@@ -1,17 +1,17 @@
 import pickle
 
-from torchfuel.trainers.state import Placeholder
+from torchfuel.trainers.state import Namespace
 
 
-def test_ph():
-    ph = Placeholder()
-    ph.test = 10
-    print(ph.stored_objects)
-    print(ph)
-    plk_object = ph.pickle_safe()
+def test_ns():
+    ns = Namespace()
+    ns.test = 10
+    print(ns.stored_objects)
+    print(ns)
+    plk_object = ns.pickle_safe()
 
     assert isinstance(plk_object, bytes)
 
 
 if __name__ == '__main__':
-    test_ph()
+    test_ns()
