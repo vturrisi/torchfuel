@@ -57,3 +57,7 @@ def test():
         errors.append(error)
 
     assert errors[0] > errors[1]
+
+
+if __name__ == '__main__':
+    test()

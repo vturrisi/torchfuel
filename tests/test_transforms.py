@@ -23,6 +23,7 @@ def test_imagedl():
     assert isinstance(eval_dataloader, DataLoader)
     assert isinstance(n_classes, int)
 
+
 def test_image2imagedl():
     dl = ImageToImageDataLoader(
         train_data_folder='tests/imgs/train',
@@ -82,4 +83,10 @@ def test_loader_apply_to_eval():
     it = iter(train_dataloader)
     assert next(it)
 
-test_loader_apply_to_eval()
+
+if __name__ == '__main__':
+    test_imagedl()
+    test_image2imagedl()
+    test_loader_error()
+    test_loader_normalize_not_imagenet()
+    test_loader_apply_to_eval()

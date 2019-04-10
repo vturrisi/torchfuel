@@ -39,3 +39,7 @@ def test_util_layers():
     it = iter(train_dataloader)
     X, y = next(it)
     assert isinstance(model(X), torch.Tensor)
+
+
+if __name__ == '__main__':
+    test_util_layers()
