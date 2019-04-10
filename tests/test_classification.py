@@ -52,6 +52,8 @@ def test():
 
         model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
         error = trainer.state.train_loss
+        cm = trainer.state.train_cm
+        assert isinstance(cm, torch.Tensor)
         errors.append(error)
 
     assert errors[0] > errors[1]

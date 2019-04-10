@@ -6,6 +6,7 @@ import torch.optim as optim
 import torchfuel.trainers.const as const
 from torchfuel.trainers.generic import GenericTrainer
 from torchfuel.trainers.hooks.metrics import (compute_epoch_acc,
+                                              compute_epoch_cm,
                                               compute_minibatch_cm,
                                               compute_minibatch_correct_preds)
 
@@ -57,6 +58,7 @@ class ClassificationTrainer(GenericTrainer):
             assert n_classes is not None
             self.n_classes = n_classes
             self.add_hook(compute_minibatch_cm, const.AFTER_MINIBATCH)
+            self.add_hook(compute_epoch_cm, const.AFTER_EPOCH)
 
     def compute_loss(self, output, y):
         """

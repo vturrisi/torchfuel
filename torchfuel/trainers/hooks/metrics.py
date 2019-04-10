@@ -70,5 +70,8 @@ def compute_epoch_acc(trainer):
 
 
 def compute_epoch_cm(trainer):
-    # TODO
-    pass
+    trainer.state.train_cm = sum((s['confusion_matrix']
+                                  for s in trainer.state.train.minibatch_stats))
+
+    trainer.state.eval_cm = sum((s['confusion_matrix']
+                                 for s in trainer.state.eval.minibatch_stats))
