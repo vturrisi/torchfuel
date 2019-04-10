@@ -399,7 +399,8 @@ class GenericTrainer:
         days, hours, minutes, seconds = parse_seconds(elapsed_time)
         print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
 
-        return self.model.load_state_dict(best_model['model'])
+        self.model.load_state_dict(best_model['model'])
+        return self.model
 
     def test(self, test_dataloader, load=False):
         if load:

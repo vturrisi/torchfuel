@@ -51,7 +51,8 @@ def test():
         imagenet_format=False
     )
 
-    train_dataloader, eval_dataloader = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
 
     model = AutoEncoder().to(device)
 

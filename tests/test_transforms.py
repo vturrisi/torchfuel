@@ -17,7 +17,9 @@ def test_imagedl():
         imagenet_format=True,
     )
 
-    train_dataloader, eval_dataloader, n_classes = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
+    n_classes = dl.n_classes
 
     assert isinstance(train_dataloader, DataLoader)
     assert isinstance(eval_dataloader, DataLoader)
@@ -36,7 +38,8 @@ def test_image2imagedl():
         imagenet_format=True,
     )
 
-    train_dataloader, eval_dataloader = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
 
     assert isinstance(train_dataloader, DataLoader)
     assert isinstance(eval_dataloader, DataLoader)
@@ -61,7 +64,9 @@ def test_loader_normalize_not_imagenet():
         std=[0.1, 0.1, 0.1],
     )
 
-    train_dataloader, eval_dataloader, n_classes = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
+    n_classes = dl.n_classes
     it = iter(train_dataloader)
     assert next(it)
 
@@ -80,7 +85,9 @@ def test_loader_apply_to_eval():
         imagenet_format=True,
     )
 
-    train_dataloader, eval_dataloader, n_classes = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
+    n_classes = dl.n_classes
     it = iter(train_dataloader)
     assert next(it)
 
