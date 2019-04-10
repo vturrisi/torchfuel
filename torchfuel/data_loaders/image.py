@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets, models, transforms
+from torchvision import datasets, transforms
 
 
 class ImageDataLoader:
@@ -150,3 +150,11 @@ class ImageToImageDataLoader(ImageDataLoader):
     def prepare(self):
         train_dataloader, eval_dataloader, _ = super().prepare()
         return train_dataloader, eval_dataloader
+
+
+class ImageFolderWithPaths(datasets.ImageFolder):
+    def __getitem__(self, index):
+        original_tuple = super().__getitem__(index)
+        # the image file path
+        path = self.imgs[index][0]
+        return (path, *original_tuple)

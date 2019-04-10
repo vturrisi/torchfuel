@@ -75,3 +75,7 @@ def test():
     trainer.fit(epochs, train_dataloader, eval_dataloader)
 
     os.remove('tests/autoencoder.pt')
+
+
+if __name__ == '__main__':
+    test()

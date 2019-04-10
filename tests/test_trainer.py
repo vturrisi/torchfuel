@@ -74,7 +74,7 @@ def test():
 
     with pytest.raises(Exception):
         @trainer.execute_on(1000)
-        def dummy_function(trainer):
+        def dummy_function2(trainer):
             pass
 
     with pytest.raises(Exception):
@@ -82,3 +82,7 @@ def test():
 
     with pytest.raises(Exception):
         trainer.add_hook(dummy_function, 1000)
+
+
+if __name__ == '__main__':
+    test()

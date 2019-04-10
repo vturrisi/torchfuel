@@ -11,3 +11,7 @@ def test_ph():
     plk_object = ph.pickle_safe()
 
     assert isinstance(plk_object, bytes)
+
+
+if __name__ == '__main__':
+    test_ph()

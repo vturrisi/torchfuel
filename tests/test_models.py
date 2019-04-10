@@ -1,3 +1,6 @@
+import os
+import shutil
+
 import torch
 from torch.utils.data.dataloader import DataLoader
 from torchvision import models, transforms
@@ -34,3 +37,19 @@ def test_camresnet():
     it = iter(train_dataloader)
     X, y = next(it)
     assert isinstance(model(X), torch.Tensor)
+
+    cam_folder = 'tests/cams'
+    model.gen_cams(device, 'tests/imgs/train', cam_folder,
+                   minmax=True, imagenet=True)
+
+    cam_per_label = os.listdir(cam_folder)
+    assert cam_per_label
+
+    for label in cam_per_label:
+        assert os.listdir(os.path.join(cam_folder, label))
+
+    shutil.rmtree(cam_folder, ignore_errors=True)
+
+
+if __name__ == '__main__':
+    test_camresnet()
