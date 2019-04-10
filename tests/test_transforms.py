@@ -50,6 +50,7 @@ def test_loader_error():
             batch_size=16,
         )
 
+
 def test_loader_normalize_not_imagenet():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',

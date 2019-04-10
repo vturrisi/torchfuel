@@ -1,6 +1,7 @@
 import os
 import time
 from collections import namedtuple
+from contextlib import suppress
 
 import torch
 import torch.nn as nn
@@ -37,26 +38,41 @@ def test():
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimiser, T_max=1)
 
-    epochs = 1
     errors = []
-    for i in range(2):
-        trainer = ClassificationTrainer(
-            device,
-            model,
-            optimiser,
-            scheduler,
-            checkpoint_model=False,
-            compute_confusion_matrix=True,
-            n_classes=n_classes
-        )
+    trainer = ClassificationTrainer(
+        device,
+        model,
+        optimiser,
+        scheduler,
+        checkpoint_model=True,
+        model_name='tests/model.pt',
+        compute_confusion_matrix=True,
+        n_classes=n_classes
+    )
 
-        model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
-        error = trainer.state.train_loss
-        cm = trainer.state.train_cm
-        assert isinstance(cm, torch.Tensor)
-        errors.append(error)
+    with suppress(FileNotFoundError):
+        os.remove('tests/model.pt')
+    epochs = 2
+    model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+    error1 = trainer.state.train_loss
 
-    assert errors[0] > errors[1]
+    epochs = 3
+    model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
+    error2 = trainer.state.train_loss
+    cm = trainer.state.train_cm
+
+    assert isinstance(cm, torch.Tensor)
+
+    assert error1 > error2
+
+    trainer.test(eval_dataloader, load=False)
+    trainer.test(eval_dataloader, load=True)
+
+    assert trainer.state.test
+
+    print(trainer.state.test)
+
+    os.remove('tests/model.pt')
 
 
 if __name__ == '__main__':
