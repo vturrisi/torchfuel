@@ -20,7 +20,9 @@ def test_camresnet():
         imagenet_format=True,
     )
 
-    train_dataloader, eval_dataloader, n_classes = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
+    n_classes = dl.n_classes
 
     device = torch.device('cpu')
 

@@ -19,13 +19,17 @@ def test():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',
         eval_data_folder='tests/imgs/eval',
+        test_data_folder='tests/imgs/eval',
         pil_transformations=[transforms.RandomHorizontalFlip(),
                              transforms.RandomVerticalFlip()],
         batch_size=16,
         imagenet_format=True,
     )
 
-    train_dataloader, eval_dataloader, n_classes = dl.prepare()
+    train_dataloader = dl.train_dl
+    eval_dataloader = dl.eval_dl
+    test_dataloader = dl.test_dl
+    n_classes = dl.n_classes
 
     # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     device = torch.device('cpu')
@@ -65,8 +69,8 @@ def test():
 
     assert error1 > error2
 
-    trainer.test(eval_dataloader, load=False)
-    trainer.test(eval_dataloader, load=True)
+    trainer.test(test_dataloader, load=False)
+    trainer.test(test_dataloader, load=True)
 
     assert trainer.state.test
 
