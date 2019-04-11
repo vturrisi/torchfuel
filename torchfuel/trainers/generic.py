@@ -53,10 +53,12 @@ class GenericTrainer:
                  scheduler: optim.lr_scheduler._LRScheduler = None,
                  checkpoint_model: bool = False,
                  checkpoint_every_n: int = 1,
-                 model_name: str = 'model.pt',
+                 model_name: str = None,
                  print_perf: bool = True):
 
-        assert checkpoint_every_n > 0
+        if checkpoint_model:
+            assert checkpoint_every_n > 0
+            assert model_name is not None, 'When checkpointing the model, model_name should be specified'
 
         self.device = device
         self.model = model

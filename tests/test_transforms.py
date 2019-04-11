@@ -75,12 +75,18 @@ def test_loader_apply_to_eval():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',
         eval_data_folder='tests/imgs/eval',
+        test_data_folder='tests/imgs/eval',
         pil_transformations=[transforms.RandomHorizontalFlip(),
                              transforms.RandomVerticalFlip()],
         tensor_transformations=[DropPixelNoiser(noise_chance=0.1),
                                 GaussianNoiser(noise_amount=0.1)],
-        apply_pil_transforms_to_eval=True,
-        apply_tensor_transforms_to_eval=True,
+
+        pil_transformations_eval=[transforms.RandomHorizontalFlip()],
+        tensor_transformations_eval=[DropPixelNoiser(noise_chance=0.1)],
+
+        pil_transformations_test=[transforms.RandomHorizontalFlip()],
+        tensor_transformations_test=[DropPixelNoiser(noise_chance=0.1)],
+
         batch_size=16,
         imagenet_format=True,
     )

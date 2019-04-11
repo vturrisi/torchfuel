@@ -15,10 +15,10 @@ class ImageDataLoader:
                  num_workers=4,
                  imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
-                 apply_pil_transforms_to_eval: bool = False,
-                 apply_tensor_transforms_to_eval: bool = False,
-                 apply_pil_transforms_to_test: bool = False,
-                 apply_tensor_transforms_to_test: bool = False,
+                 pil_transformations_eval: bool = False,
+                 tensor_transformations_eval: bool = False,
+                 pil_transformations_test: bool = False,
+                 tensor_transformations_test: bool = False,
                  dataset_class: Dataset = datasets.ImageFolder):
 
         if pil_transformations is None:
@@ -40,11 +40,11 @@ class ImageDataLoader:
         self.mean = mean
         self.std = std
 
-        self.apply_pil_transforms_to_eval = apply_pil_transforms_to_eval
-        self.apply_tensor_transforms_to_eval = apply_tensor_transforms_to_eval
+        self.pil_transformations_eval = pil_transformations_eval
+        self.tensor_transformations_eval = tensor_transformations_eval
 
-        self.apply_pil_transforms_to_test = apply_pil_transforms_to_test
-        self.apply_tensor_transforms_to_test = apply_tensor_transforms_to_test
+        self.pil_transformations_test = pil_transformations_test
+        self.tensor_transformations_test = tensor_transformations_test
 
         self.dataset_class = dataset_class
 
@@ -85,10 +85,10 @@ class ImageDataLoader:
 
         train_transforms = transforms.Compose(train_t)
 
-        if self.apply_pil_transforms_to_eval:
+        if self.pil_transformations_eval:
             eval_t = [
                 transforms.Resize(size),
-                *self.pil_transformations,
+                *self.pil_transformations_eval,
                 transforms.ToTensor(),
             ]
         else:
@@ -99,16 +99,16 @@ class ImageDataLoader:
         if normalise:
             eval_t.append(transforms.Normalize(mean, std))
 
-        if self.apply_tensor_transforms_to_eval:
-            eval_t.extend(self.tensor_transformations)
+        if self.tensor_transformations_eval:
+            eval_t.extend(self.tensor_transformations_eval)
 
         eval_transforms = transforms.Compose(eval_t)
 
         if self.test_data_folder:
-            if self.apply_pil_transforms_to_test:
+            if self.pil_transformations_test:
                 test_t = [
                     transforms.Resize(size),
-                    *self.pil_transformations,
+                    *self.pil_transformations_test,
                     transforms.ToTensor(),
                 ]
             else:
@@ -119,8 +119,8 @@ class ImageDataLoader:
             if normalise:
                 test_t.append(transforms.Normalize(mean, std))
 
-            if self.apply_tensor_transforms_to_test:
-                test_t.extend(self.tensor_transformations)
+            if self.tensor_transformations_test:
+                test_t.extend(self.tensor_transformations_test)
 
             test_transforms = transforms.Compose(test_t)
 
@@ -164,10 +164,10 @@ class ImageToImageDataLoader(ImageDataLoader):
                  num_workers=4,
                  imagenet_format=False,
                  size=None, mean: list = None, std: list = None,
-                 apply_pil_transforms_to_eval: bool = False,
-                 apply_tensor_transforms_to_eval: bool = False,
-                 apply_pil_transforms_to_test: bool = False,
-                 apply_tensor_transforms_to_test: bool = False,
+                 pil_transformations_eval: bool = False,
+                 tensor_transformations_eval: bool = False,
+                 pil_transformations_test: bool = False,
+                 tensor_transformations_test: bool = False,
                  ):
 
         super().__init__(
@@ -183,10 +183,10 @@ class ImageToImageDataLoader(ImageDataLoader):
             size,
             mean,
             std,
-            apply_pil_transforms_to_eval,
-            apply_tensor_transforms_to_eval,
-            apply_pil_transforms_to_test,
-            apply_tensor_transforms_to_test,
+            pil_transformations_eval,
+            tensor_transformations_eval,
+            pil_transformations_test,
+            tensor_transformations_test,
             dataset_class=ImageToImageReader
         )
 
