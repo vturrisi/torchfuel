@@ -49,7 +49,8 @@ optimiser = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=20)
 
-trainer = ClassificationTrainer(device, model, optimiser, scheduler)
+trainer = ClassificationTrainer(device, model, optimiser, scheduler,
+                                checkpoint_model=True, model_name='test.pt')
 
 fitted_model = trainer.fit(epochs, train_dataloader, eval_dataloader)
 
