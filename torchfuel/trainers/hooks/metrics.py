@@ -3,23 +3,15 @@ from contextlib import suppress
 import torch
 
 
-def compute_minibatch_loss(trainer):
-    data = trainer.state.current_minibatch
-    loss = data['loss']
-
-    stats = trainer.state.current_minibatch_stats
-    stats['loss'] = loss
-
-
 def compute_minibatch_correct_preds(trainer):
     data = trainer.state.current_minibatch
     X = data['X']
     y = data['y']
+    batch_size = data['size']
     output = data['output']
 
     _, pred = torch.max(output, 1)
     correct = torch.sum(pred == y).item()
-    batch_size = X.size(0)
     stats = trainer.state.current_minibatch_stats
     stats['size'] = batch_size
     stats['correct_predictions'] = correct
@@ -41,39 +33,65 @@ def compute_minibatch_cm(trainer):
 def compute_epoch_loss(trainer):
     with suppress(AttributeError):
         train_loss = 0
-        for s in trainer.state.train.minibatch_stats:
-            train_loss += s['loss']
+        for state in trainer.state.train.minibatch_stats:
+            train_loss += state['loss']
         trainer.state.train_loss = train_loss
 
     with suppress(AttributeError):
         eval_loss = 0
-        for s in trainer.state.eval.minibatch_stats:
-            eval_loss += s['loss']
+        for state in trainer.state.eval.minibatch_stats:
+            eval_loss += state['loss']
         trainer.state.eval_loss = eval_loss
 
     with suppress(AttributeError):
         test_loss = 0
-        for s in trainer.state.test.minibatch_stats:
-            test_loss += s['loss']
+        for state in trainer.state.test.minibatch_stats:
+            test_loss += state['loss']
         trainer.state.test_loss = eval_loss
+
+
+def compute_avg_epoch_loss(trainer):
+    with suppress(AttributeError):
+        n = 0
+        train_loss = 0
+        for state in trainer.state.train.minibatch_stats:
+            train_loss += state['loss']
+            n += state['size']
+        trainer.state.train_loss = train_loss / n
+
+    with suppress(AttributeError):
+        n = 0
+        eval_loss = 0
+        for state in trainer.state.eval.minibatch_stats:
+            eval_loss += state['loss']
+            n += state['size']
+        trainer.state.eval_loss = eval_loss / n
+
+    with suppress(AttributeError):
+        n = 0
+        test_loss = 0
+        for state in trainer.state.test.minibatch_stats:
+            test_loss += state['loss']
+            n += state['size']
+        trainer.state.test_loss = eval_loss / n
 
 
 def compute_epoch_acc(trainer):
     with suppress(AttributeError):
         n = 0
         correct_predictions = 0
-        for s in trainer.state.train.minibatch_stats:
-            correct_predictions += s['correct_predictions']
-            n += s['size']
+        for state in trainer.state.train.minibatch_stats:
+            correct_predictions += state['correct_predictions']
+            n += state['size']
         train_acc = correct_predictions / n
         trainer.state.train_acc = train_acc
 
     with suppress(AttributeError):
         n = 0
         correct_predictions = 0
-        for s in trainer.state.eval.minibatch_stats:
-            correct_predictions += s['correct_predictions']
-            n += s['size']
+        for state in trainer.state.eval.minibatch_stats:
+            correct_predictions += state['correct_predictions']
+            n += state['size']
         eval_acc = correct_predictions / n
 
         trainer.state.eval_acc = eval_acc
@@ -81,9 +99,9 @@ def compute_epoch_acc(trainer):
     with suppress(AttributeError):
         n = 0
         correct_predictions = 0
-        for s in trainer.state.test.minibatch_stats:
-            correct_predictions += s['correct_predictions']
-            n += s['size']
+        for state in trainer.state.test.minibatch_stats:
+            correct_predictions += state['correct_predictions']
+            n += state['size']
         test_acc = correct_predictions / n
 
         trainer.state.test_acc = test_acc
@@ -91,13 +109,13 @@ def compute_epoch_acc(trainer):
 
 def compute_epoch_cm(trainer):
     with suppress(AttributeError):
-        trainer.state.train_cm = sum((s['confusion_matrix']
-                                      for s in trainer.state.train.minibatch_stats))
+        trainer.state.train_cm = sum((state['confusion_matrix']
+                                      for state in trainer.state.train.minibatch_stats))
 
     with suppress(AttributeError):
-        trainer.state.eval_cm = sum((s['confusion_matrix']
-                                     for s in trainer.state.eval.minibatch_stats))
+        trainer.state.eval_cm = sum((state['confusion_matrix']
+                                     for state in trainer.state.eval.minibatch_stats))
 
     with suppress(AttributeError):
-        trainer.state.test_cm = sum((s['confusion_matrix']
-                                     for s in trainer.state.test.minibatch_stats))
+        trainer.state.test_cm = sum((state['confusion_matrix']
+                                     for state in trainer.state.test.minibatch_stats))

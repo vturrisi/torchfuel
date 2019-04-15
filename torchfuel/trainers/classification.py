@@ -35,6 +35,8 @@ class ClassificationTrainer(GenericTrainer):
                  checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True,
+                 use_total_loss: bool = True,
+                 use_avg_loss: bool = False,
                  n_classes: bool = None,
                  compute_confusion_matrix: bool = False):
 
@@ -46,7 +48,9 @@ class ClassificationTrainer(GenericTrainer):
             checkpoint_model=checkpoint_model,
             checkpoint_every_n=checkpoint_every_n,
             model_name=model_name,
-            print_perf=print_perf
+            print_perf=print_perf,
+            use_total_loss=use_total_loss,
+            use_avg_loss=use_avg_loss,
         )
 
         # adds hooks to compute correctly predicted instances and accuracy

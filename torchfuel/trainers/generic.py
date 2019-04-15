@@ -14,8 +14,8 @@ from torchfuel.trainers.hooks.generic import (compute_epoch_time,
                                               log_start_time,
                                               step_on_plateau_scheduler,
                                               step_scheduler)
-from torchfuel.trainers.hooks.metrics import (compute_epoch_loss,
-                                              compute_minibatch_loss)
+from torchfuel.trainers.hooks.metrics import (compute_avg_epoch_loss,
+                                              compute_epoch_loss)
 from torchfuel.trainers.state import State
 from torchfuel.utils.time_parser import parse_seconds
 
@@ -54,11 +54,19 @@ class GenericTrainer:
                  checkpoint_model: bool = False,
                  checkpoint_every_n: int = 1,
                  model_name: str = None,
-                 print_perf: bool = True):
+                 print_perf: bool = True,
+                 use_total_loss: bool = True,
+                 use_avg_loss: bool = False):
 
         if checkpoint_model:
             assert checkpoint_every_n > 0
-            assert model_name is not None, 'When checkpointing the model, model_name should be specified'
+            assert model_name is not None, (
+                'When checkpointing the model, model_name should be specified'
+            )
+
+        assert not all((use_total_loss, use_avg_loss)), (
+            'Specify only one type of loss (either use_total_loss or use_avg_loss)'
+        )
 
         self.device = device
         self.model = model
@@ -68,6 +76,8 @@ class GenericTrainer:
         self.checkpoint_every_n = checkpoint_every_n
         self.model_name = model_name
         self.print_perf = print_perf
+        self.use_total_loss = use_total_loss
+        self.use_avg_loss = use_avg_loss
 
         self.state = State()
 
@@ -86,8 +96,12 @@ class GenericTrainer:
 
         # adds basic hooks to compute elapsed time and losses
         self.add_hook(log_start_time, const.BEFORE_EPOCH)
-        self.add_hook(compute_minibatch_loss, const.AFTER_MINIBATCH)
-        self.add_hook(compute_epoch_loss, const.AFTER_EPOCH)
+
+        if use_total_loss:
+            self.add_hook(compute_epoch_loss, const.AFTER_EPOCH)
+        elif use_avg_loss:
+            self.add_hook(compute_avg_epoch_loss, const.AFTER_EPOCH)
+
         self.add_hook(compute_epoch_time, const.AFTER_EPOCH)
 
         if scheduler is not None:
@@ -246,11 +260,16 @@ class GenericTrainer:
         for X, y in tqdm(dataloader, desc=msg, leave=False):
             X = X.to(self.device)
             y = y.to(self.device)
+            batch_size = X.size(0)
 
-            self.state.current_minibatch_stats = {}
+            self.state.current_minibatch_stats = {
+                'size': batch_size,
+            }
+
             self.state.current_minibatch = {
                 'X': X,
-                'y': y
+                'y': y,
+                'size': batch_size
             }
 
             self._run_hooks(const.BEFORE_MINIBATCH)
@@ -260,8 +279,9 @@ class GenericTrainer:
 
             self.state.current_minibatch.update({
                 'output': output,
-                'loss': loss,
             })
+
+            self.state.current_minibatch_stats['loss'] = loss
 
             self._run_hooks(const.AFTER_MINIBATCH)
             self._run_hooks(const.AFTER_TRAIN_MINIBATCH)
@@ -279,11 +299,16 @@ class GenericTrainer:
             for X, y in tqdm(dataloader, desc=msg, leave=False):
                 X = X.to(self.device)
                 y = y.to(self.device)
+                batch_size = X.size(0)
 
-                self.state.current_minibatch_stats = {}
+                self.state.current_minibatch_stats = {
+                    'size': batch_size,
+                }
+
                 self.state.current_minibatch = {
                     'X': X,
-                    'y': y
+                    'y': y,
+                    'size': batch_size
                 }
 
                 self._run_hooks(const.BEFORE_MINIBATCH)
@@ -293,8 +318,9 @@ class GenericTrainer:
 
                 self.state.current_minibatch.update({
                     'output': output,
-                    'loss': loss,
                 })
+
+                self.state.current_minibatch_stats['loss'] = loss
 
                 self._run_hooks(const.AFTER_MINIBATCH)
                 self._run_hooks(const.AFTER_EVAL_MINIBATCH)
@@ -311,11 +337,16 @@ class GenericTrainer:
             for X, y in tqdm(dataloader, desc=msg, leave=False):
                 X = X.to(self.device)
                 y = y.to(self.device)
+                batch_size = X.size(0)
 
-                self.state.current_minibatch_stats = {}
+                self.state.current_minibatch_stats = {
+                    'size': batch_size
+                }
+
                 self.state.current_minibatch = {
                     'X': X,
-                    'y': y
+                    'y': y,
+                    'size': batch_size
                 }
 
                 self._run_hooks(const.BEFORE_MINIBATCH)
@@ -325,8 +356,9 @@ class GenericTrainer:
 
                 self.state.current_minibatch.update({
                     'output': output,
-                    'loss': loss,
                 })
+
+                self.state.current_minibatch_stats['loss'] = loss
 
                 self._run_hooks(const.AFTER_MINIBATCH)
                 self._run_hooks(const.AFTER_TEST_MINIBATCH)

@@ -72,17 +72,16 @@ class CAMResnet(nn.Module):
             for inp_img, img, label in zip(paths, imgs, labels):
                 img = img.view(1, *img.size())
 
-                label_name = os.path.dirname(inp_img).split(os.path.sep)[-1]
-                folder = os.path.join(out_folder, label_name)
-                # make output folder if it
+                # make output folder if it does not exists
                 with suppress(FileExistsError):
-                    os.makedirs(folder)
+                    os.makedirs(out_folder)
 
-                pred = torch.max(self(img), 1)[1].item() + 1
+                pred = torch.max(self(img), 1)[1].item()
                 fname = os.path.basename(inp_img)
                 name, ext = os.path.splitext(fname)
-                fname = '{}_pred={}{}'.format(name, pred, ext)
-                out_name = os.path.join(folder, fname)
+                label_name = os.path.dirname(inp_img).split(os.path.sep)[-1]
+                fname = '{}_real={}({})_pred={}{}'.format(name, label, label_name, pred, ext)
+                out_name = os.path.join(out_folder, fname)
 
                 activation_maps = self.activations(img).detach()
                 b, c, h, w = activation_maps.size()

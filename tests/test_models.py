@@ -40,15 +40,18 @@ def test_camresnet():
     X, y = next(it)
     assert isinstance(model(X), torch.Tensor)
 
+    img_folder = 'tests/imgs/train'
     cam_folder = 'tests/cams'
-    model.gen_cams(device, 'tests/imgs/train', cam_folder,
+    model.gen_cams(device, img_folder, cam_folder,
                    minmax=True, imagenet=True)
 
-    cam_per_label = os.listdir(cam_folder)
-    assert cam_per_label
+    cams = os.listdir(cam_folder)
+    imgs = []
+    for subfolder in os.listdir(img_folder):
+        imgs.extend(os.listdir(os.path.join(img_folder, subfolder)))
+    assert cams
 
-    for label in cam_per_label:
-        assert os.listdir(os.path.join(cam_folder, label))
+    assert len(cams) == len(imgs)
 
     shutil.rmtree(cam_folder, ignore_errors=True)
 
