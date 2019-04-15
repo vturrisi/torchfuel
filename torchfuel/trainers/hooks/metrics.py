@@ -3,7 +3,7 @@ from contextlib import suppress
 import torch
 
 
-def compute_minibatch_correct_preds(trainer):
+def compute_minibatch_correct_preds(trainer) -> None:
     data = trainer.state.current_minibatch
     X = data['X']
     y = data['y']
@@ -17,7 +17,7 @@ def compute_minibatch_correct_preds(trainer):
     stats['correct_predictions'] = correct
 
 
-def compute_minibatch_cm(trainer):
+def compute_minibatch_cm(trainer) -> None:
     data = trainer.state.current_minibatch
     y = data['y']
     output = data['output']
@@ -30,7 +30,7 @@ def compute_minibatch_cm(trainer):
     stats['confusion_matrix'] = cm
 
 
-def compute_epoch_loss(trainer):
+def compute_epoch_loss(trainer) -> None:
     with suppress(AttributeError):
         train_loss = 0
         for state in trainer.state.train.minibatch_stats:
@@ -50,7 +50,7 @@ def compute_epoch_loss(trainer):
         trainer.state.test_loss = eval_loss
 
 
-def compute_avg_epoch_loss(trainer):
+def compute_avg_epoch_loss(trainer) -> None:
     with suppress(AttributeError):
         n = 0
         train_loss = 0
@@ -76,7 +76,7 @@ def compute_avg_epoch_loss(trainer):
         trainer.state.test_loss = eval_loss / n
 
 
-def compute_epoch_acc(trainer):
+def compute_epoch_acc(trainer) -> None:
     with suppress(AttributeError):
         n = 0
         correct_predictions = 0
@@ -107,7 +107,7 @@ def compute_epoch_acc(trainer):
         trainer.state.test_acc = test_acc
 
 
-def compute_epoch_cm(trainer):
+def compute_epoch_cm(trainer) -> None:
     with suppress(AttributeError):
         trainer.state.train_cm = sum((state['confusion_matrix']
                                       for state in trainer.state.train.minibatch_stats))

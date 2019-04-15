@@ -1,3 +1,5 @@
+from typing import Dict, Optional, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,6 +25,9 @@ class ClassificationTrainer(GenericTrainer):
         - scheduler: learning rate scheduler
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
+        - use_avg_loss: whether to use average loss instead of total loss
+        - n_classes: number of classes (optinal, used only when computing confusion matrix)
+        - compute_confusion_matrix: whether to compute confusion matrix
 
     """
 
@@ -35,8 +40,7 @@ class ClassificationTrainer(GenericTrainer):
                  checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True,
-                 use_total_loss: bool = True,
-                 use_avg_loss: bool = False,
+                 use_avg_loss: Optional[bool] = False,
                  n_classes: bool = None,
                  compute_confusion_matrix: bool = False):
 
@@ -49,7 +53,6 @@ class ClassificationTrainer(GenericTrainer):
             checkpoint_every_n=checkpoint_every_n,
             model_name=model_name,
             print_perf=print_perf,
-            use_total_loss=use_total_loss,
             use_avg_loss=use_avg_loss,
         )
 
@@ -64,7 +67,7 @@ class ClassificationTrainer(GenericTrainer):
             self.add_hook(compute_minibatch_cm, const.AFTER_MINIBATCH)
             self.add_hook(compute_epoch_cm, const.AFTER_EPOCH)
 
-    def compute_loss(self, output, y):
+    def compute_loss(self, output: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """
         Computes cross-entropy loss between output and y.
 
@@ -76,7 +79,7 @@ class ClassificationTrainer(GenericTrainer):
 
         return F.cross_entropy(output, y)
 
-    def print_epoch_performance(self):
+    def print_epoch_performance(self) -> None:
         """
         Prints the performance of the last epoch.
         This is automatically called every epoch.
@@ -99,7 +102,10 @@ class ClassificationTrainer(GenericTrainer):
                      eval_loss, eval_acc, elapsed_time)
         print(s)
 
-    def update_best_model(self, best_model):
+    def update_best_model(
+        self,
+        best_model: Optional[Dict[str, Union[float, Dict]]]
+    ) -> Dict[str, Union[float, Dict]]:
         """
         Updates best model using best_model['acc']
 

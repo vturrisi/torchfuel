@@ -37,8 +37,8 @@ def test():
     resnet = models.resnet18(pretrained=True)
     model = CAMResnet(resnet, n_classes).to(device)
 
-    optimiser = optim.SGD([{'params': model.activations.parameters(), 'lr': 0.005},
-                           {'params': model.fc_layer.parameters()}], lr=0.01, momentum=0.9)
+    optimiser = optim.Adam([{'params': model.activations.parameters(), 'lr': 0.005},
+                           {'params': model.fc_layer.parameters()}], lr=0.01)
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimiser, T_max=1)
 

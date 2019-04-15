@@ -71,6 +71,23 @@ def test_loader_normalize_not_imagenet():
     assert next(it)
 
 
+def test_loader_force_prepare_error():
+    dl = ImageDataLoader(
+        train_data_folder='tests/imgs/train',
+        eval_data_folder='tests/imgs/eval',
+        batch_size=16,
+        size=224,
+        mean=[0.5, 0.5, 0.5],
+        std=[0.1, 0.1, 0.1],
+    )
+
+    with pytest.raises(Exception):
+        dl.size = None
+        dl.mean = None
+        dl.std = None
+        dl.prepare()
+
+
 def test_loader_apply_to_eval():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',
@@ -103,4 +120,5 @@ if __name__ == '__main__':
     test_image2imagedl()
     test_loader_error()
     test_loader_normalize_not_imagenet()
+    test_loader_force_prepare_error()
     test_loader_apply_to_eval()

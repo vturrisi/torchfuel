@@ -1,6 +1,7 @@
 import os
 import shutil
 
+import pytest
 import torch
 from torch.utils.data.dataloader import DataLoader
 from torchvision import models, transforms
@@ -26,24 +27,26 @@ def test_camresnet():
 
     device = torch.device('cpu')
 
-    resnet = models.resnet18(pretrained=True)
-    model = CAMResnet(resnet, n_classes).to(device)
-
     it = iter(train_dataloader)
     X, y = next(it)
-    assert isinstance(model(X), torch.Tensor)
 
     resnet = models.resnet50(pretrained=True)
     model = CAMResnet(resnet, n_classes).to(device)
 
-    it = iter(train_dataloader)
-    X, y = next(it)
+    resnet = models.resnet101(pretrained=True)
+    model = CAMResnet(resnet, n_classes).to(device)
+
+    resnet = models.resnet18(pretrained=True)
+    model = CAMResnet(resnet, n_classes).to(device)
+
     assert isinstance(model(X), torch.Tensor)
 
     img_folder = 'tests/imgs/train'
     cam_folder = 'tests/cams'
-    model.gen_cams(device, img_folder, cam_folder,
-                   minmax=True, imagenet=True)
+
+    shutil.rmtree(cam_folder, ignore_errors=True)
+
+    model.gen_cams(device, img_folder, cam_folder, imagenet=True)
 
     cams = os.listdir(cam_folder)
     imgs = []
@@ -54,6 +57,22 @@ def test_camresnet():
     assert len(cams) == len(imgs)
 
     shutil.rmtree(cam_folder, ignore_errors=True)
+
+    model.gen_cams(device, img_folder, cam_folder,
+                   normalise_abs=True, size=224)
+
+    cams = os.listdir(cam_folder)
+    imgs = []
+    for subfolder in os.listdir(img_folder):
+        imgs.extend(os.listdir(os.path.join(img_folder, subfolder)))
+    assert cams
+
+    assert len(cams) == len(imgs)
+
+    shutil.rmtree(cam_folder, ignore_errors=True)
+
+    with pytest.raises(Exception):
+        model.gen_cams(device, img_folder, cam_folder, minmax=True)
 
 
 if __name__ == '__main__':
