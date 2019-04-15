@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torchvision.models.resnet import ResNet
 
 from torchfuel.layers.utils import Flatten
@@ -18,6 +17,7 @@ class GradCAMResnet(CAMModel):
         def save_grad(module, grad_in, grad_out):
             self.grads = {'grad_in': grad_in, 'grad_out': grad_out}
 
+        # list(self.activations.modules())[-3].register_backward_hook(save_grad)
         self.activations.register_backward_hook(save_grad)
 
     def forward(self, imgs: torch.Tensor) -> torch.Tensor:
@@ -28,13 +28,14 @@ class GradCAMResnet(CAMModel):
 
     def get_cam(self, img: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
         out = self(img)
-        loss = F.cross_entropy(out, label)
-        loss.backward()
+        out = out[0, label]
+        out.backward()
         grads = self.grads['grad_in'][-1]
         activation_maps = self.activations(img).detach()
         b, c, h, w = activation_maps.size()
         activation_maps = activation_maps.view(c, h, w)
         weights = torch.mean(grads, (2, 3)).view(-1, 1, 1)
+        weights = torch.abs(weights)
         activation_maps = activation_maps * weights
         cam = torch.sum(activation_maps, 0)
         *_, i, j = cam.size()

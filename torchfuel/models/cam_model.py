@@ -24,6 +24,7 @@ class CAMModel(nn.Module):
         device: torch.device,
         inp_folder: str,
         out_folder: str,
+        normalise_abs: Optional[bool] = False,
         imagenet: Optional[bool] = False,
         size: Union[int, Tuple] = None,
         mean: Optional[Tuple] = None,
@@ -74,10 +75,13 @@ class CAMModel(nn.Module):
 
                 cam = self.get_cam(img, label)
 
-                min_v = torch.min(cam, 1)[0]
-                max_v = torch.max(cam, 1)[0]
-                range_v = max_v - min_v
-                cam = (cam - min_v) / range_v
+                if normalise_abs:
+                    cam = torch.abs(cam)
+                else:
+                    min_v = torch.min(cam)
+                    max_v = torch.max(cam)
+                    range_v = max_v - min_v
+                    cam = (cam - min_v) / range_v
                 cam = cam.cpu().numpy()
 
                 self._save_cam(inp_img, cam, out_name)
