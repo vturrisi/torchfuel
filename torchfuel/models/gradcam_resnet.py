@@ -5,7 +5,7 @@ from torchvision.models.resnet import ResNet
 
 from torchfuel.layers.utils import Flatten
 from torchfuel.models.cam_model import CAMModel
-
+import numpy as np
 
 class GradCAMResnet(CAMModel):
     def __init__(self, base_resnet: ResNet, n_classes: int):
