@@ -119,5 +119,5 @@ def test_gradcamresnet():
 
 
 if __name__ == '__main__':
-    # test_camresnet()
+    test_camresnet()
     test_gradcamresnet()

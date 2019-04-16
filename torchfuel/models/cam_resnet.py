@@ -29,11 +29,14 @@ class CAMResnet(CAMModel):
         output = self.fc(output)
         return output
 
-    def get_cam(self, img: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
+    def get_cam(self, img: torch.Tensor) -> torch.Tensor:
+        out = self(img)
+        _, pred = torch.max(out, 1)
+
         activation_maps = self.activations(img).detach()
         b, c, h, w = activation_maps.size()
         activation_maps = activation_maps.view(c, h, w)
-        weights = self.fc.weight[label].detach().view(-1, 1, 1)
+        weights = self.fc.weight[pred].detach().view(-1, 1, 1)
         activation_maps = activation_maps * weights
         cam = torch.sum(activation_maps, 0)
         *_, i, j = cam.size()

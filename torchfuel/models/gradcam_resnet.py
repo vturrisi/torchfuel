@@ -26,10 +26,12 @@ class GradCAMResnet(CAMModel):
         output = self.fc(output)
         return output
 
-    def get_cam(self, img: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
+    def get_cam(self, img: torch.Tensor) -> torch.Tensor:
         out = self(img)
-        out = out[0, label]
+        _, pred = torch.max(out, 1)
+        out = out[0, pred]
         out.backward()
+
         grads = self.grads['grad_in'][-1]
         activation_maps = self.activations(img).detach()
         b, c, h, w = activation_maps.size()

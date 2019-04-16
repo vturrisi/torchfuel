@@ -16,7 +16,7 @@ from torchfuel.data_loaders.image import ImageFolderWithPaths
 
 class CAMModel(nn.Module):
     @abstractmethod
-    def get_cam(self, img: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
+    def get_cam(self, img: torch.Tensor) -> torch.Tensor:
         pass
 
     def gen_cams(
@@ -73,7 +73,7 @@ class CAMModel(nn.Module):
                 fname = '{}_real={}({})_pred={}{}'.format(name, label.item(), label_name, pred, ext)
                 out_name = os.path.join(out_folder, fname)
 
-                cam = self.get_cam(img, label)
+                cam = self.get_cam(img)
 
                 if normalise_abs:
                     cam = torch.abs(cam)
