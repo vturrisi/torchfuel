@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Any
 
 import torch
 import torch.nn as nn
@@ -108,14 +108,14 @@ class ClassificationTrainer(GenericTrainer):
 
     def update_best_model(
         self,
-        best_model: Optional[Dict[str, Union[float, Dict]]]
-    ) -> Dict[str, Union[float, Dict]]:
+        best_model: Dict[str, Union[float, Any]]
+    ) -> Dict[str, Union[float, Any]]:
         """
         Updates best model using best_model['acc']
 
         """
-
         eval_acc = self.state.eval_acc
+
         if best_model is None or eval_acc > best_model['acc']:
             best_model = {}
             best_model['acc'] = eval_acc

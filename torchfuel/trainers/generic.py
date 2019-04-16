@@ -2,7 +2,7 @@ import pickle
 import time
 import typing
 from abc import abstractmethod
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -216,8 +216,8 @@ class GenericTrainer:
 
     def update_best_model(
         self,
-        best_model: Dict[str, Union[float, Dict]]
-    ) -> Dict[str, Union[float, Dict]]:
+        best_model: Dict[str, Union[float, Any]]
+    ) -> Dict[str, Union[float, Any]]:
         """
         Updates best model using best_model['loss'].
         This is automatically called every epoch.
@@ -226,6 +226,7 @@ class GenericTrainer:
         """
 
         eval_loss = self.state.eval_loss
+
         if best_model is None or eval_loss < best_model['loss']:
             best_model = {}
             best_model['loss'] = eval_loss
@@ -390,12 +391,17 @@ class GenericTrainer:
 
     def save_model(self, best_model: Dict[str, Union[float, Dict]]) -> None:
         if best_model is not None:
+            if self.scheduler is None:
+                scheduler_state = None
+            else:
+                scheduler_state = self.scheduler.state_dict()
+
             epoch = self.state.current_epoch
             torch.save({
                 'epoch': epoch,
                 'model_state': self.model.state_dict(),
                 'optimiser_state': self.optimiser.state_dict(),
-                'scheduler_state': self.scheduler.state_dict(),
+                'scheduler_state': scheduler_state,
                 'best_model': best_model,
             }, self.model_name)
 
@@ -414,6 +420,8 @@ class GenericTrainer:
         checkpoint = torch.load(self.model_name)
         best_model = checkpoint['best_model']['model']
         self.model.load_state_dict(best_model)
+
+        return self.model
 
     def fit(self, epochs, train_dataloader, eval_dataloader):
         try:

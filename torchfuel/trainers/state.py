@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 
 class Namespace:
@@ -16,15 +16,17 @@ class Namespace:
         else:
             super().__setattr__(name, value)
 
-    def __getattr__(self, name: str) -> List[Dict[str, Union[int, float]]]:
+    def __getattr__(self, name: str) -> Any:
         '''
         intercept lookups which would raise an exception
         to check if variable is being stored
         '''
         if name in self.stored_objects:
             return self.stored_objects[name]
+        elif name == 'stored_objects':
+            return self.stored_objects
         else:
-            return super().__getattr__(name)
+            raise AttributeError("'Namespace' object has no attribute {} (shouldn't fall here)".format(name))
 
     def pickle_safe(self) -> bytes:
         return pickle.dumps(self)
@@ -43,8 +45,8 @@ class State:
     eval_acc: float
     test_acc: float
 
-    current_minibatch: Optional[dict]
-    current_minibatch_stats: Optional[dict]
+    current_minibatch: Optional[Dict]
+    current_minibatch_stats: Optional[Dict]
 
     def __init__(self):
         self.train = Namespace()
