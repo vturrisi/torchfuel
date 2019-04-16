@@ -45,6 +45,7 @@ class GenericTrainer:
         - scheduler: learning rate scheduler
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
+        - use_tqdm: whether to use tqdm for better visualisation during each step
         - use_avg_loss: whether to use average loss instead of total loss
 
     """
@@ -58,6 +59,7 @@ class GenericTrainer:
                  checkpoint_every_n: int = 1,
                  model_name: str = None,
                  print_perf: bool = True,
+                 use_tqdm: bool = True,
                  use_avg_loss: bool = False):
 
         if checkpoint_model:
@@ -73,7 +75,9 @@ class GenericTrainer:
         self.checkpoint_model = checkpoint_model
         self.checkpoint_every_n = checkpoint_every_n
         self.model_name = model_name
+
         self.print_perf = print_perf
+        self.use_tqdm = use_tqdm
         self.use_avg_loss = use_avg_loss
 
         self.state = State()
@@ -212,7 +216,7 @@ class GenericTrainer:
 
     def update_best_model(
         self,
-        best_model: Optional[Dict[str, Union[float, Dict]]]
+        best_model: Dict[str, Union[float, Dict]]
     ) -> Dict[str, Union[float, Dict]]:
         """
         Updates best model using best_model['loss'].
@@ -252,12 +256,18 @@ class GenericTrainer:
         return output, total_loss
 
     def train_epoch(self, dataloader: DataLoader) -> None:
-        epoch = self.state.current_epoch
-        msg = 'Training (epoch {})'.format(epoch)
+        self.model.train()
+
         self.state.train.minibatch_stats = []
 
-        self.model.train()
-        for X, y in tqdm(dataloader, desc=msg, leave=False):
+        if self.use_tqdm:
+            epoch = self.state.current_epoch
+            msg = 'Training (epoch {})'.format(epoch)
+            it = tqdm(dataloader, desc=msg, leave=False)
+        else:
+            it = dataloader
+
+        for X, y in it:
             X = X.to(self.device)
             y = y.to(self.device)
             batch_size = X.size(0)
@@ -290,13 +300,19 @@ class GenericTrainer:
             self.state.train.minibatch_stats.append(minibatch_stats)
 
     def eval_epoch(self, dataloader: DataLoader) -> None:
-        epoch = self.state.current_epoch
-        msg = 'Evaluating (epoch {})'.format(epoch)
+        self.model.eval()
+
         self.state.eval.minibatch_stats = []
 
-        self.model.eval()
+        if self.use_tqdm:
+            epoch = self.state.current_epoch
+            msg = 'Evaluating (epoch {})'.format(epoch)
+            it = tqdm(dataloader, desc=msg, leave=False)
+        else:
+            it = dataloader
+
         with torch.set_grad_enabled(False):
-            for X, y in tqdm(dataloader, desc=msg, leave=False):
+            for X, y in it:
                 X = X.to(self.device)
                 y = y.to(self.device)
                 batch_size = X.size(0)
@@ -329,12 +345,18 @@ class GenericTrainer:
                 self.state.eval.minibatch_stats.append(minibatch_stats)
 
     def test_epoch(self, dataloader: DataLoader) -> None:
-        msg = 'Testing'
+        self.model.eval()
+
         self.state.test.minibatch_stats = []
 
-        self.model.eval()
+        if self.use_tqdm:
+            msg = 'Testing'
+            it = tqdm(dataloader, desc=msg, leave=False)
+        else:
+            it = dataloader
+
         with torch.set_grad_enabled(False):
-            for X, y in tqdm(dataloader, desc=msg, leave=False):
+            for X, y in it:
                 X = X.to(self.device)
                 y = y.to(self.device)
                 batch_size = X.size(0)
@@ -367,14 +389,15 @@ class GenericTrainer:
                 self.state.test.minibatch_stats.append(minibatch_stats)
 
     def save_model(self, best_model: Dict[str, Union[float, Dict]]) -> None:
-        epoch = self.state.current_epoch
-        torch.save({
-            'epoch': epoch,
-            'model_state': self.model.state_dict(),
-            'optimiser_state': self.optimiser.state_dict(),
-            'scheduler_state': self.scheduler.state_dict(),
-            'best_model': best_model,
-        }, self.model_name)
+        if best_model is not None:
+            epoch = self.state.current_epoch
+            torch.save({
+                'epoch': epoch,
+                'model_state': self.model.state_dict(),
+                'optimiser_state': self.optimiser.state_dict(),
+                'scheduler_state': self.scheduler.state_dict(),
+                'best_model': best_model,
+            }, self.model_name)
 
     def load_model(self) -> Tuple[int, Dict[str, Union[float, Dict]]]:
         checkpoint = torch.load(self.model_name)

@@ -39,6 +39,10 @@ class State:
     eval_loss: float
     test_loss: float
 
+    train_acc: float
+    eval_acc: float
+    test_acc: float
+
     current_minibatch: Optional[dict]
     current_minibatch_stats: Optional[dict]
 

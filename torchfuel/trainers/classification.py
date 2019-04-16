@@ -26,6 +26,7 @@ class ClassificationTrainer(GenericTrainer):
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
         - use_avg_loss: whether to use average loss instead of total loss
+        - use_tqdm: whether to use tqdm for better visualisation during each step
         - n_classes: number of classes (optinal, used only when computing confusion matrix)
         - compute_confusion_matrix: whether to compute confusion matrix
 
@@ -36,13 +37,15 @@ class ClassificationTrainer(GenericTrainer):
                  model: nn.Module,
                  optimiser: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler = None,
+                 n_classes: bool = None,
+                 compute_confusion_matrix: bool = False,
                  checkpoint_model: bool = False,
                  checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True,
                  use_avg_loss: bool = False,
-                 n_classes: bool = None,
-                 compute_confusion_matrix: bool = False):
+                 use_tqdm: bool = True,
+                 ):
 
         super().__init__(
             device,
@@ -54,6 +57,7 @@ class ClassificationTrainer(GenericTrainer):
             model_name=model_name,
             print_perf=print_perf,
             use_avg_loss=use_avg_loss,
+            use_tqdm=use_tqdm,
         )
 
         # adds hooks to compute correctly predicted instances and accuracy
