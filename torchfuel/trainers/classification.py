@@ -40,7 +40,7 @@ class ClassificationTrainer(GenericTrainer):
                  checkpoint_every_n: int = 1,
                  model_name: str = 'model.pt',
                  print_perf: bool = True,
-                 use_avg_loss: Optional[bool] = False,
+                 use_avg_loss: bool = False,
                  n_classes: bool = None,
                  compute_confusion_matrix: bool = False):
 

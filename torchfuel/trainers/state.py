@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 
 class Namespace:
@@ -31,6 +31,17 @@ class Namespace:
 
 
 class State:
+    # this stops mypy from complaining
+    current_epoch: int
+    elapsed_time: float
+
+    train_loss: float
+    eval_loss: float
+    test_loss: float
+
+    current_minibatch: Optional[dict]
+    current_minibatch_stats: Optional[dict]
+
     def __init__(self):
         self.train = Namespace()
         self.eval = Namespace()

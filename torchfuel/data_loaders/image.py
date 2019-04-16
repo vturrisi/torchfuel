@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -10,19 +10,19 @@ class ImageDataLoader:
                  train_data_folder: str,
                  eval_data_folder: str,
                  test_data_folder: Optional[str] = None,
-                 pil_transformations: Optional[list] = None,
-                 tensor_transformations: Optional[list] = None,
+                 pil_transformations: Optional[Iterable] = None,
+                 tensor_transformations: Optional[Iterable] = None,
                  batch_size: int = 64,
                  shuffle: bool = True,
                  num_workers: int = 4,
                  imagenet_format=False,
-                 size: Union[int, Tuple] = None,
-                 mean: Optional[list] = None,
-                 std: Optional[list] = None,
-                 pil_transformations_eval: Optional[list] = False,
-                 tensor_transformations_eval: Optional[list] = False,
-                 pil_transformations_test: Optional[list] = False,
-                 tensor_transformations_test: Optional[list] = False,
+                 size: Union[int, Iterable] = None,
+                 mean: Optional[Iterable] = None,
+                 std: Optional[Iterable] = None,
+                 pil_transformations_eval: Optional[Iterable] = None,
+                 tensor_transformations_eval: Optional[Iterable] = None,
+                 pil_transformations_test: Optional[Iterable] = None,
+                 tensor_transformations_test: Optional[Iterable] = None,
                  dataset_class: Dataset = datasets.ImageFolder):
 
         if pil_transformations is None:
@@ -151,7 +151,7 @@ class ImageDataLoader:
 
 
 class ImageToImageReader(datasets.ImageFolder):
-    def __getitem__(self, index: int) -> Tuple[str, torch.Tensor, int]:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         img, y = super().__getitem__(index)
         return img, img
 
@@ -167,13 +167,13 @@ class ImageToImageDataLoader(ImageDataLoader):
                  shuffle: bool = True,
                  num_workers: int = 4,
                  imagenet_format=False,
-                 size: Union[int, Tuple] = None,
-                 mean: Optional[list] = None,
-                 std: Optional[list] = None,
-                 pil_transformations_eval: Optional[list] = False,
-                 tensor_transformations_eval: Optional[list] = False,
-                 pil_transformations_test: Optional[list] = False,
-                 tensor_transformations_test: Optional[list] = False,
+                 size: Union[int, Iterable] = None,
+                 mean: Optional[Iterable] = None,
+                 std: Optional[Iterable] = None,
+                 pil_transformations_eval: Optional[Iterable] = None,
+                 tensor_transformations_eval: Optional[Iterable] = None,
+                 pil_transformations_test: Optional[Iterable] = None,
+                 tensor_transformations_test: Optional[Iterable] = None,
                  dataset_class: Dataset = datasets.ImageFolder
                  ):
 

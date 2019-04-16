@@ -2,7 +2,7 @@
 import os
 from abc import abstractmethod
 from contextlib import suppress
-from typing import Optional, Tuple, Union
+from typing import Optional, Union, Iterable
 
 import cv2
 import numpy as np
@@ -26,9 +26,9 @@ class CAMModel(nn.Module):
         out_folder: str,
         normalise_abs: Optional[bool] = False,
         imagenet: Optional[bool] = False,
-        size: Union[int, Tuple] = None,
-        mean: Optional[Tuple] = None,
-        std: Optional[Tuple] = None
+        size: Union[int, Iterable] = None,
+        mean: Optional[Iterable] = None,
+        std: Optional[Iterable] = None
     ) -> None:
         # create transforms for dataset
         t = []

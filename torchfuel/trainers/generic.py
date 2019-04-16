@@ -380,7 +380,8 @@ class GenericTrainer:
         checkpoint = torch.load(self.model_name)
         self.model.load_state_dict(checkpoint['model_state'])
         self.optimiser.load_state_dict(checkpoint['optimiser_state'])
-        self.scheduler.load_state_dict(checkpoint['scheduler_state'])
+        if self.scheduler is not None:
+            self.scheduler.load_state_dict(checkpoint['scheduler_state'])
         start_epoch = checkpoint['epoch']
         best_model = checkpoint['best_model']
 
