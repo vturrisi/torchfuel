@@ -12,6 +12,9 @@ from torchfuel.models.cam_resnet import CAMResnet
 from torchfuel.models.gradcam_resnet import GradCAMResnet
 
 
+torch.manual_seed(1)
+
+
 def test_camresnet():
     dl = ImageDataLoader(
         train_data_folder='tests/imgs/train',
@@ -95,8 +98,8 @@ def test_gradcamresnet():
     it = iter(train_dataloader)
     X, y = next(it)
 
-    resnet = models.resnet18(pretrained=True)
-    model = GradCAMResnet(resnet, n_classes).to(device)
+    resnet = models.resnet50(pretrained=True)
+    model = GradCAMResnet(resnet, n_classes, resolution=14).to(device)
 
     assert isinstance(model(X), torch.Tensor)
 
@@ -119,5 +122,5 @@ def test_gradcamresnet():
 
 
 if __name__ == '__main__':
-    test_camresnet()
+    # test_camresnet()
     test_gradcamresnet()

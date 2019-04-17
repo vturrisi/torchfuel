@@ -2,12 +2,13 @@
 import os
 from abc import abstractmethod
 from contextlib import suppress
-from typing import Optional, Union, Iterable
+from typing import Iterable, Optional, Union
 
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import transforms
 from tqdm import tqdm
 
@@ -24,7 +25,6 @@ class CAMModel(nn.Module):
         device: torch.device,
         inp_folder: str,
         out_folder: str,
-        normalise_abs: Optional[bool] = False,
         imagenet: Optional[bool] = False,
         size: Union[int, Iterable] = None,
         mean: Optional[Iterable] = None,
@@ -75,13 +75,12 @@ class CAMModel(nn.Module):
 
                 cam = self.get_cam(img)
 
-                if normalise_abs:
-                    cam = torch.abs(cam)
-                else:
-                    min_v = torch.min(cam)
-                    max_v = torch.max(cam)
-                    range_v = max_v - min_v
-                    cam = (cam - min_v) / range_v
+                # negative values should be ignored in CAM
+                cam = F.relu(cam)
+                min_v = torch.min(cam)
+                max_v = torch.max(cam)
+                range_v = max_v - min_v
+                cam = (cam - min_v) / range_v
                 cam = cam.cpu().numpy()
 
                 self._save_cam(inp_img, cam, out_name)

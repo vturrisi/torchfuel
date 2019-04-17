@@ -207,7 +207,7 @@ class GenericTrainer:
         eval_loss = self.state.eval_loss
         elapsed_time = self.state.elapsed_time
 
-        s = ('(Epoch #{}) Train loss {:.3f}'
+        s = ('(Epoch #{}) Train loss {:.4f}'
              ' | Eval loss {:.4f} ({:.2f} s)')
 
         s = s.format(epoch, train_loss,
