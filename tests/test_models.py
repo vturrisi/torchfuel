@@ -62,19 +62,6 @@ def test_camresnet():
 
     shutil.rmtree(cam_folder, ignore_errors=True)
 
-    model.gen_cams(device, img_folder, cam_folder,
-                   normalise_abs=True, size=224)
-
-    cams = os.listdir(cam_folder)
-    imgs = []
-    for subfolder in os.listdir(img_folder):
-        imgs.extend(os.listdir(os.path.join(img_folder, subfolder)))
-    assert cams
-
-    assert len(cams) == len(imgs)
-
-    shutil.rmtree(cam_folder, ignore_errors=True)
-
     with pytest.raises(Exception):
         model.gen_cams(device, img_folder, cam_folder, minmax=True)
 
@@ -122,5 +109,5 @@ def test_gradcamresnet():
 
 
 if __name__ == '__main__':
-    # test_camresnet()
+    test_camresnet()
     test_gradcamresnet()

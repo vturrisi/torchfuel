@@ -77,6 +77,7 @@ class CAMModel(nn.Module):
 
                 # negative values should be ignored in CAM
                 cam = F.relu(cam)
+
                 min_v = torch.min(cam)
                 max_v = torch.max(cam)
                 range_v = max_v - min_v
