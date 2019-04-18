@@ -39,7 +39,6 @@ def test():
             x = self.decoder(x)
             return x
 
-    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     device = torch.device('cpu')
 
     dl = ImageToImageDataLoader(
@@ -71,7 +70,7 @@ def test():
 
     trainer.fit(epochs, train_dataloader, eval_dataloader)
 
-    trainer.epochs = 100
+    trainer.epochs = 20
     # will need to load model
     trainer.fit(epochs, train_dataloader, eval_dataloader)
 

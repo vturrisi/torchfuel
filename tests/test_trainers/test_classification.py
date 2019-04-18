@@ -31,7 +31,6 @@ def test():
     test_dataloader = dl.test_dl
     n_classes = dl.n_classes
 
-    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     device = torch.device('cpu')
 
     resnet = models.resnet18(pretrained=True)
