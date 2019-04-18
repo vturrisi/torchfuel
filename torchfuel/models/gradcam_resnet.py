@@ -14,6 +14,9 @@ class GradCAMResnet(CAMModel):
         assert resolution in [7, 14, 28, 56, 112]
 
         self.resolution = resolution
+        self._desired_layer_id = 0
+        self._desired_layer_output: torch.Tensor = None
+        self._desired_layer_grad: torch.Tensor = None
 
         resnet_children = list(base_resnet.children())
 
@@ -52,10 +55,6 @@ class GradCAMResnet(CAMModel):
         self._handlers = []
 
     def get_cam(self, img: torch.Tensor) -> torch.Tensor:
-        self._desired_layer_id = 0
-        self._desired_layer_output: torch.Tensor = None
-        self._desired_layer_grad: torch.Tensor = None
-
         self._add_hooks()
 
         out = self(img)
