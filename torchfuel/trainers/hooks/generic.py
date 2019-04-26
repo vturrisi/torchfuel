@@ -1,5 +1,4 @@
 import time
-from typing import Union, Type
 
 
 def log_start_time(trainer) -> None:

@@ -49,7 +49,7 @@ def test():
 
     shutil.rmtree(cam_folder, ignore_errors=True)
 
-    model.gen_cams(device, img_folder, cam_folder, imagenet=True)
+    model.gen_visualisation_for_multiple_images(device, img_folder, cam_folder, imagenet=True)
 
     cams = os.listdir(cam_folder)
     imgs = []
@@ -62,7 +62,7 @@ def test():
     shutil.rmtree(cam_folder, ignore_errors=True)
 
     with pytest.raises(Exception):
-        model.gen_cams(device, img_folder, cam_folder, minmax=True)
+        model.gen_visualisation_for_multiple_images(device, img_folder, cam_folder, minmax=True)
 
 if __name__ == '__main__':
     test()

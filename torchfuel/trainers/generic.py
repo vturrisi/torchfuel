@@ -18,7 +18,7 @@ from torchfuel.trainers.hooks.generic import (compute_epoch_time,
                                               step_scheduler)
 from torchfuel.trainers.hooks.metrics import (compute_avg_epoch_loss,
                                               compute_epoch_loss)
-from torchfuel.trainers.state import State
+from torchfuel.utils.state import State
 from torchfuel.utils.time_parser import parse_seconds
 
 

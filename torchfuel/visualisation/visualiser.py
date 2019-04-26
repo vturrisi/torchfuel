@@ -15,12 +15,12 @@ from tqdm import tqdm
 from torchfuel.data_loaders.image import ImageFolderWithPaths
 
 
-class CAMModel(nn.Module):
+class Visualiser(nn.Module):
     @abstractmethod
-    def get_cam(self, img: torch.Tensor) -> torch.Tensor:
+    def gen_visualisation(self, img: torch.Tensor, inp_img: str, out_name: str):
         pass
 
-    def gen_cams(
+    def gen_visualisation_for_multiple_images(
         self,
         device: torch.device,
         inp_folder: str,
@@ -73,23 +73,4 @@ class CAMModel(nn.Module):
                 fname = '{}_real={}({})_pred={}{}'.format(name, label.item(), label_name, pred, ext)
                 out_name = os.path.join(out_folder, fname)
 
-                cam = self.get_cam(img)
-
-                # negative values should be ignored in CAM
-                cam = F.relu(cam)
-
-                min_v = torch.min(cam)
-                max_v = torch.max(cam)
-                range_v = max_v - min_v
-                cam = (cam - min_v) / range_v
-                cam = cam.cpu().numpy()
-
-                self._save_cam(inp_img, cam, out_name)
-
-    def _save_cam(self, inp_img: str, cam: np.ndarray, out_name: str):
-        cam = np.uint8(255 * cam)
-        img = cv2.imread(inp_img)
-        height, width, _ = img.shape
-        heatmap = cv2.applyColorMap(cv2.resize(cam, (width, height)), cv2.COLORMAP_JET)
-        result = heatmap * 0.3 + img * 0.5
-        cv2.imwrite(out_name, result)
+                self.gen_visualisation(img, inp_img, out_name)

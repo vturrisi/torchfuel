@@ -33,7 +33,7 @@ class Namespace:
 
 
 class State:
-    # this stops mypy from complaining
+    # this stops mypy from complaining (trainer)
     current_epoch: int
     elapsed_time: float
 

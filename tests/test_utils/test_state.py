@@ -1,6 +1,6 @@
 import pickle
 
-from torchfuel.trainers.state import Namespace, State
+from torchfuel.utils.state import Namespace, State
 
 
 def test_ns():

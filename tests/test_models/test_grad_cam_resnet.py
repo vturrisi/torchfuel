@@ -8,8 +8,8 @@ from torchvision import models, transforms
 
 from torchfuel.data_loaders.image import (ImageDataLoader,
                                           ImageToImageDataLoader)
-from torchfuel.models.gradcam_resnet import GradCAMResnet
-
+from torchfuel.models.visible_resnet import VisibleResnet
+from torchfuel.visualisation.grad_cam import GradCAM
 
 torch.manual_seed(1)
 
@@ -34,7 +34,7 @@ def test():
     X, y = next(it)
 
     resnet = models.resnet50(pretrained=True)
-    model = GradCAMResnet(resnet, n_classes, resolution=14).to(device)
+    model = VisibleResnet(resnet, n_classes).to(device)
 
     assert isinstance(model(X), torch.Tensor)
 
@@ -43,7 +43,9 @@ def test():
 
     shutil.rmtree(cam_folder, ignore_errors=True)
 
-    model.gen_cams(device, img_folder, cam_folder, imagenet=True)
+    visualiser = GradCAM(model, resolution=14)
+
+    visualiser.gen_visualisation_for_multiple_images(device, img_folder, cam_folder, imagenet=True)
 
     cams = os.listdir(cam_folder)
     imgs = []
