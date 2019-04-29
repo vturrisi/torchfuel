@@ -13,7 +13,7 @@ env:
 
 script:
     - mypy $SOURCE_FILES --ignore-missing-imports
-    - pytest tests/ --cov=torchfuel
+    - pytest test/ --cov=torchfuel
 
 notifications:
     email:

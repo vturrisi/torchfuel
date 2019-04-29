@@ -16,8 +16,8 @@ torch.manual_seed(1)
 
 def test():
     dl = ImageDataLoader(
-        train_data_folder='tests/imgs/train',
-        eval_data_folder='tests/imgs/eval',
+        train_data_folder='test/imgs/train',
+        eval_data_folder='test/imgs/eval',
         pil_transformations=[transforms.RandomHorizontalFlip(),
                              transforms.RandomVerticalFlip()],
         batch_size=16,
@@ -38,8 +38,8 @@ def test():
 
     assert isinstance(model(X), torch.Tensor)
 
-    img_folder = 'tests/imgs/train'
-    cam_folder = 'tests/cams'
+    img_folder = 'test/imgs/train'
+    cam_folder = 'test/cams'
 
     shutil.rmtree(cam_folder, ignore_errors=True)
 

@@ -44,8 +44,8 @@ def test():
     device = torch.device('cpu')
 
     dl = ImageToImageDataLoader(
-        train_data_folder='tests/imgs/train',
-        eval_data_folder='tests/imgs/eval',
+        train_data_folder='test/imgs/train',
+        eval_data_folder='test/imgs/eval',
         tensor_transformations=[],
         size=56,
         imagenet_format=False
@@ -113,8 +113,8 @@ def test_avg_loss():
     device = torch.device('cpu')
 
     dl = ImageToImageDataLoader(
-        train_data_folder='tests/imgs/train',
-        eval_data_folder='tests/imgs/eval',
+        train_data_folder='test/imgs/train',
+        eval_data_folder='test/imgs/eval',
         tensor_transformations=[],
         size=56,
         imagenet_format=False

@@ -42,8 +42,8 @@ def test():
     device = torch.device('cpu')
 
     dl = ImageToImageDataLoader(
-        train_data_folder='tests/imgs/train',
-        eval_data_folder='tests/imgs/eval',
+        train_data_folder='test/imgs/train',
+        eval_data_folder='test/imgs/eval',
         tensor_transformations=[],
         size=56,
         imagenet_format=False
@@ -65,7 +65,7 @@ def test():
         optimiser,
         scheduler,
         checkpoint_model=True,
-        model_name='tests/autoencoder.pt'
+        model_name='test/autoencoder.pt'
     )
 
     trainer.fit(epochs, train_dataloader, eval_dataloader)
@@ -74,7 +74,7 @@ def test():
     # will need to load model
     trainer.fit(epochs, train_dataloader, eval_dataloader)
 
-    os.remove('tests/autoencoder.pt')
+    os.remove('test/autoencoder.pt')
 
 
 if __name__ == '__main__':

@@ -17,9 +17,9 @@ from torchfuel.trainers.classification import ClassificationTrainer
 
 def test():
     dl = ImageDataLoader(
-        train_data_folder='tests/imgs/train',
-        eval_data_folder='tests/imgs/eval',
-        test_data_folder='tests/imgs/eval',
+        train_data_folder='test/imgs/train',
+        eval_data_folder='test/imgs/eval',
+        test_data_folder='test/imgs/eval',
         pil_transformations=[transforms.RandomHorizontalFlip(),
                              transforms.RandomVerticalFlip()],
         batch_size=16,
@@ -48,13 +48,13 @@ def test():
         optimiser,
         scheduler,
         checkpoint_model=True,
-        model_name='tests/model.pt',
+        model_name='test/model.pt',
         compute_confusion_matrix=True,
         n_classes=n_classes
     )
 
     with suppress(FileNotFoundError):
-        os.remove('tests/model.pt')
+        os.remove('test/model.pt')
     epochs = 2
     model_fitted = trainer.fit(epochs, train_dataloader, eval_dataloader)
     error1 = trainer.state.train_loss
@@ -75,7 +75,7 @@ def test():
 
     print(trainer.state.test)
 
-    os.remove('tests/model.pt')
+    os.remove('test/model.pt')
 
 
 if __name__ == '__main__':
