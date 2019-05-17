@@ -5,13 +5,14 @@ from collections import namedtuple
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
-from torchfuel.trainers.mse import MSETrainer
+from torchfuel.trainers.base import Trainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
 
@@ -59,9 +60,11 @@ def test():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
     epochs = 10
-    trainer = MSETrainer(
+    loss_function = F.mse_loss
+    trainer = Trainer(
         device,
         model,
+        loss_function,
         optimiser,
         scheduler,
         checkpoint_model=True,

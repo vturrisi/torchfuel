@@ -6,14 +6,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import torchfuel.trainers.const as const
-from torchfuel.trainers.generic import GenericTrainer
+from torchfuel.trainers.base import Trainer
 from torchfuel.trainers.hooks.metrics import (compute_epoch_acc,
                                               compute_epoch_cm,
                                               compute_minibatch_cm,
                                               compute_minibatch_correct_preds)
 
 
-class ClassificationTrainer(GenericTrainer):
+class ClassificationTrainer(Trainer):
     """
     Basic classification trainer which uses cross-entropy loss to train a model.
     Also computes accuracy and defines best model based on eval accuracy.
@@ -47,9 +47,12 @@ class ClassificationTrainer(GenericTrainer):
                  use_tqdm: bool = True,
                  ):
 
+        loss_function = F.cross_entropy
+
         super().__init__(
             device,
             model,
+            loss_function,
             optimiser,
             scheduler,
             checkpoint_model=checkpoint_model,

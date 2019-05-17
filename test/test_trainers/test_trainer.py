@@ -5,14 +5,15 @@ from collections import namedtuple
 import pytest
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
+from torchfuel.trainers.base import Trainer
 from torchfuel.trainers.const import AFTER_EPOCH
-from torchfuel.trainers.mse import MSETrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
 
 
@@ -61,9 +62,11 @@ def test():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
     epochs = 1
-    trainer = MSETrainer(
+    loss_function = F.mse_loss
+    trainer = Trainer(
         device,
         model,
+        loss_function,
         optimiser,
         scheduler,
         checkpoint_model=False,
@@ -130,9 +133,11 @@ def test_avg_loss():
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
 
     epochs = 1
-    trainer = MSETrainer(
+    loss_function = F.mse_loss
+    trainer = Trainer(
         device,
         model,
+        loss_function,
         optimiser,
         scheduler,
         checkpoint_model=False,
