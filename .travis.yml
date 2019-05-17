@@ -4,15 +4,10 @@ python:
     - "3.6"
 
 install:
-    - pip install mypy codecov pytest-cov
+    - pip install codecov pytest-cov
     - python setup.py install
 
-env:
-    global:
-        - SOURCE_FILES=`find ./torchfuel/ -name '*.py'`
-
 script:
-    - mypy $SOURCE_FILES --ignore-missing-imports
     - pytest test/ --cov=torchfuel
 
 notifications:
