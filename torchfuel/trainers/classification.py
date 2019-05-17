@@ -23,12 +23,12 @@ class ClassificationTrainer(Trainer):
         - model: model to train
         - optimiser: torch optimiser
         - scheduler: learning rate scheduler
+        - n_classes: number of classes (optinal, used only when computing confusion matrix)
+        - compute_confusion_matrix: whether to compute confusion matrix
         - model_name: name of the trained model
         - print_perf: whether to print performance during training
         - use_avg_loss: whether to use average loss instead of total loss
         - use_tqdm: whether to use tqdm for better visualisation during each step
-        - n_classes: number of classes (optinal, used only when computing confusion matrix)
-        - compute_confusion_matrix: whether to compute confusion matrix
 
     """
 

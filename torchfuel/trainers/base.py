@@ -22,12 +22,13 @@ from torchfuel.utils.state import State
 from torchfuel.utils.time_parser import parse_seconds
 
 
-class Trainer:
+class GenericTrainer:
     """
     Implements a generic trainer which provides a train and eval loops,
     basic evaluation metrics (elapsed time and losses), and autosaves models.
 
-    This method is used to allow the trainer to know how to compute the loss of a model given its output and y.
+    Never use this class directly. First inherit this class and overwrite the compute_loss method.
+    This method is used to allow the trainer to know how to compute	 the loss of a model given its output and y.
 
     update_best_model should also be overwritten if the best model is based on other metrics, e.g., accuracy.
 
@@ -39,7 +40,6 @@ class Trainer:
     Args:
         - device: torch device
         - model: model to train
-        - loss_function: loss function
         - optimiser: torch optimiser
         - scheduler: learning rate scheduler
         - model_name: name of the trained model
@@ -52,7 +52,6 @@ class Trainer:
     def __init__(self,
                  device: torch.device,
                  model: nn.Module,
-                 loss_function: Callable,
                  optimiser: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler = None,
                  checkpoint_model: bool = False,
@@ -70,7 +69,6 @@ class Trainer:
 
         self.device = device
         self.model = model
-        self.loss_function = loss_function
         self.optimiser = optimiser
         self.scheduler = scheduler
         self.checkpoint_model = checkpoint_model
@@ -111,6 +109,17 @@ class Trainer:
                 self.add_hook(step_on_plateau_scheduler, const.AFTER_EPOCH)
             else:
                 self.add_hook(step_scheduler, const.BEFORE_EPOCH)
+
+    @abstractmethod
+    def compute_loss(self, output: torch.Tensor, y: torch.Tensor):
+        """
+        Abstract method which is used to compute the loss value given the model output and y.
+         Args:
+            - output: model output
+            - y: real y
+         """
+
+        pass
 
     def execute_on(self, where: const.Event, every_n_epochs: int = 1) -> Callable:
         """
@@ -224,7 +233,7 @@ class Trainer:
 
     def train_minibatch(self, X: torch.Tensor, y: torch.Tensor) -> Tuple[torch.Tensor, float]:
         output = self.model(X)
-        loss = self.loss_function(output, y)
+        loss = self.compute_loss(output, y)
 
         self.optimiser.zero_grad()
         loss.backward()
@@ -237,7 +246,7 @@ class Trainer:
 
     def eval_minibatch(self, X: torch.Tensor, y: torch.Tensor) -> Tuple[torch.Tensor, float]:
         output = self.model(X)
-        loss = self.loss_function(output, y)
+        loss = self.compute_loss(output, y)
 
         batch_size = X.size(0)
         total_loss = loss.item() * batch_size
@@ -468,3 +477,52 @@ class Trainer:
         self._run_hooks(const.AFTER_EVAL)
 
         self._run_hooks(const.AFTER_EPOCH)
+
+
+class Trainer(GenericTrainer):
+    """
+    Implements GenericTrainer allowing a loss function to be passed as parameter.
+
+    Args:
+        - device: torch device
+        - model: model to train
+        - optimiser: torch optimiser
+        - scheduler: learning rate scheduler
+        - model_name: name of the trained model
+        - print_perf: whether to print performance during training
+        - use_avg_loss: whether to use average loss instead of total loss
+        - use_tqdm: whether to use tqdm for better visualisation during each step
+
+    """
+
+    def __init__(self,
+                 device: torch.device,
+                 model: nn.Module,
+                 loss_function: Callable,
+                 optimiser: optim.Optimizer,
+                 scheduler: optim.lr_scheduler._LRScheduler = None,
+                 checkpoint_model: bool = False,
+                 checkpoint_every_n: int = 1,
+                 model_name: str = 'model.pt',
+                 print_perf: bool = True,
+                 use_avg_loss: bool = False,
+                 use_tqdm: bool = True,
+                 ):
+
+        super().__init__(
+            device,
+            model,
+            optimiser,
+            scheduler,
+            checkpoint_model=checkpoint_model,
+            checkpoint_every_n=checkpoint_every_n,
+            model_name=model_name,
+            print_perf=print_perf,
+            use_avg_loss=use_avg_loss,
+            use_tqdm=use_tqdm,
+        )
+
+        self.loss_function = loss_function
+
+    def compute_loss(self, output: torch.Tensor, y: torch.Tensor):
+        return self.loss_function(output, y)

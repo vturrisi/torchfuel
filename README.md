@@ -4,11 +4,12 @@
 
 Build on top of pytorch to fuel productivity.
 
+
 # Features
 
 - Generic Trainer
+- Trainer for custom loss functions as parameter
 - Classification Trainer (with cross-entropy loss)
-- MSE Trainer
 - Additional utility layers
 - Better dataloaders (currently only for image datasets)
 
