@@ -1,9 +1,17 @@
+import os
+import sys
+
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.resnet import ResNet
+
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
 
 from torchfuel.layers.utils import Flatten
 from torchfuel.visualisation.visualiser import Visualiser
@@ -23,8 +31,7 @@ class CAMResnet(Visualiser):
             last_sublayer = list(self.activations[-1][-1].children())[-2]
             n_filters = last_sublayer.num_features
 
-        self.gap = nn.Sequential(nn.AvgPool2d(14, 14),
-                                 Flatten())
+        self.gap = nn.Sequential(nn.AvgPool2d(14, 14), Flatten())
         self.fc = nn.Linear(n_filters, n_classes, bias=False)
 
     def forward(self, imgs: torch.Tensor) -> torch.Tensor:

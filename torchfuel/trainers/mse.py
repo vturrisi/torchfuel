@@ -1,7 +1,10 @@
 import torch
 import torch.nn.functional as F
 
-from torchfuel.trainers.generic import GenericTrainer
+try:
+    from generic import GenericTrainer
+except:
+    from .generic import GenericTrainer
 
 
 class MSETrainer(GenericTrainer):

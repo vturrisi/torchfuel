@@ -4,7 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchfuel.visualisation.visualiser import Visualiser
+try:
+    from visualiser import Visualiser
+except:
+    from .visualiser import Visualiser
 
 
 class GradCAM(Visualiser):
@@ -12,8 +15,8 @@ class GradCAM(Visualiser):
         super().__init__()
 
         assert resolution in [7, 14, 28, 56, 112]
-        assert hasattr(model, 'activations')
-        assert hasattr(model, 'fc')
+        assert hasattr(model, "activations")
+        assert hasattr(model, "fc")
 
         self.resolution = resolution
         self._desired_layer_id = 0

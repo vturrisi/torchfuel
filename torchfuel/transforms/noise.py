@@ -1,7 +1,7 @@
 import torch
 
 
-class GaussianNoiser():
+class GaussianNoiser:
     def __init__(self, noise_amount: float):
         self.noise_amount = noise_amount
 
@@ -20,7 +20,7 @@ class GaussianNoiser():
         return noisy_img
 
 
-class DropPixelNoiser():
+class DropPixelNoiser:
     def __init__(self, noise_chance: float):
         self.noise_chance = noise_chance
 

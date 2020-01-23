@@ -1,6 +1,14 @@
+import os
+import sys
+
 import torch
 import torch.nn as nn
 from torchvision.models.resnet import ResNet
+
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
 
 from torchfuel.layers.utils import Flatten
 

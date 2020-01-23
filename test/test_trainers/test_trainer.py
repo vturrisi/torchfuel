@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from collections import namedtuple
 
@@ -8,6 +9,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from torchvision import datasets, models, transforms
+
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
@@ -30,9 +36,7 @@ def test():
             )
 
             self.decoder = nn.Sequential(
-                nn.Linear(50, 56 * 56 * 3),
-                nn.Sigmoid(),
-                ReshapeToImg(3, 56, 56),
+                nn.Linear(50, 56 * 56 * 3), nn.Sigmoid(), ReshapeToImg(3, 56, 56),
             )
 
         def forward(self, x):
@@ -41,14 +45,14 @@ def test():
             return x
 
     # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     dl = ImageToImageDataLoader(
-        train_data_folder='test/imgs/train',
-        eval_data_folder='test/imgs/eval',
+        train_data_folder="test/imgs/train",
+        eval_data_folder="test/imgs/eval",
         tensor_transformations=[],
         size=56,
-        imagenet_format=False
+        imagenet_format=False,
     )
 
     train_dataloader = dl.train_dl
@@ -58,22 +62,17 @@ def test():
 
     optimiser = optim.Adam(model.parameters(), lr=0.01)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, "min", patience=50)
 
     epochs = 1
-    trainer = MSETrainer(
-        device,
-        model,
-        optimiser,
-        scheduler,
-        checkpoint_model=False,
-    )
+    trainer = MSETrainer(device, model, optimiser, scheduler, checkpoint_model=False,)
 
     @trainer.execute_on(AFTER_EPOCH)
     def dummy_function(trainer):
         pass
 
     with pytest.raises(Exception):
+
         @trainer.execute_on(1000)
         def dummy_function2(trainer):
             pass
@@ -99,9 +98,7 @@ def test_avg_loss():
             )
 
             self.decoder = nn.Sequential(
-                nn.Linear(50, 56 * 56 * 3),
-                nn.Sigmoid(),
-                ReshapeToImg(3, 56, 56),
+                nn.Linear(50, 56 * 56 * 3), nn.Sigmoid(), ReshapeToImg(3, 56, 56),
             )
 
         def forward(self, x):
@@ -110,14 +107,14 @@ def test_avg_loss():
             return x
 
     # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     dl = ImageToImageDataLoader(
-        train_data_folder='test/imgs/train',
-        eval_data_folder='test/imgs/eval',
+        train_data_folder="test/imgs/train",
+        eval_data_folder="test/imgs/eval",
         tensor_transformations=[],
         size=56,
-        imagenet_format=False
+        imagenet_format=False,
     )
 
     train_dataloader = dl.train_dl
@@ -127,21 +124,17 @@ def test_avg_loss():
 
     optimiser = optim.Adam(model.parameters(), lr=0.01)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, "min", patience=50)
 
     epochs = 1
     trainer = MSETrainer(
-        device,
-        model,
-        optimiser,
-        scheduler,
-        checkpoint_model=False,
-        use_avg_loss=True,
+        device, model, optimiser, scheduler, checkpoint_model=False, use_avg_loss=True,
     )
 
     trainer.fit(10, train_dataloader, eval_dataloader)
     assert 1 == 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test()
     test_avg_loss()

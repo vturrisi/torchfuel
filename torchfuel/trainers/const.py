@@ -1,6 +1,6 @@
 import typing
 
-Event = typing.NewType('Event', int)
+Event = typing.NewType("Event", int)
 
 BEFORE_MINIBATCH = Event(1)
 AFTER_MINIBATCH = Event(2)

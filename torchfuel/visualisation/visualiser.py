@@ -1,5 +1,5 @@
-
 import os
+import sys
 from abc import abstractmethod
 from contextlib import suppress
 from typing import Iterable, Optional, Union
@@ -12,6 +12,10 @@ import torch.nn.functional as F
 from torchvision import transforms
 from tqdm import tqdm
 
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
 from torchfuel.data_loaders.image import ImageFolderWithPaths
 
 
@@ -28,7 +32,7 @@ class Visualiser(nn.Module):
         imagenet: Optional[bool] = False,
         size: Union[int, Iterable] = None,
         mean: Optional[Iterable] = None,
-        std: Optional[Iterable] = None
+        std: Optional[Iterable] = None,
     ) -> None:
         # create transforms for dataset
         t = []
@@ -45,7 +49,7 @@ class Visualiser(nn.Module):
             else:
                 normalise = False
         else:
-            raise Exception('Use imagenet or specify at least size')
+            raise Exception("Use imagenet or specify at least size")
             normalise = False
         t.append(transforms.ToTensor())
         if normalise:
@@ -70,7 +74,8 @@ class Visualiser(nn.Module):
                 fname = os.path.basename(inp_img)
                 name, ext = os.path.splitext(fname)
                 label_name = os.path.dirname(inp_img).split(os.path.sep)[-1]
-                fname = '{}_real={}({})_pred={}{}'.format(name, label.item(), label_name, pred, ext)
+                fname = f"{name}_real={label.item()}({label_name})_pred={pred}{ext}"
+
                 out_name = os.path.join(out_folder, fname)
 
                 self.gen_visualisation(img, inp_img, out_name)

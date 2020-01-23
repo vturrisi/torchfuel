@@ -1,4 +1,6 @@
+import os
 import pickle
+import sys
 import time
 import typing
 from abc import abstractmethod
@@ -11,15 +13,32 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import torchfuel.trainers.const as const
-from torchfuel.trainers.hooks.generic import (compute_epoch_time,
-                                              log_start_time,
-                                              step_on_plateau_scheduler,
-                                              step_scheduler)
-from torchfuel.trainers.hooks.metrics import (compute_avg_epoch_loss,
-                                              compute_epoch_loss)
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
+
 from torchfuel.utils.state import State
 from torchfuel.utils.time_parser import parse_seconds
+
+import torchfuel.trainers.const as const
+
+try:
+    from hooks.generic import (
+        compute_epoch_time,
+        log_start_time,
+        step_on_plateau_scheduler,
+        step_scheduler,
+    )
+    from hooks.metrics import compute_avg_epoch_loss, compute_epoch_loss
+except:
+    from .hooks.generic import (
+        compute_epoch_time,
+        log_start_time,
+        step_on_plateau_scheduler,
+        step_scheduler,
+    )
+    from .hooks.metrics import compute_avg_epoch_loss, compute_epoch_loss
 
 
 class GenericTrainer:
@@ -31,12 +50,14 @@ class GenericTrainer:
     This method is used to allow the trainer to know how to compute
     the loss of a model given its output and y.
 
-    update_best_model should also be overwritten if the best model is based on other metrics, e.g., accuracy.
+    update_best_model should also be overwritten if the best model is based on other metrics,
+        e.g., accuracy.
 
     It is easy to add new functionalities using the execute_on decorator or the add_hook method.
     Functions added by either method should use the constants defined in the const.py file.
     All functions should receive only one parameter which is the trainer.
-    Data should be saved on the trainer.state variable (optionally use trainer.state.train/trainer.state.eval)
+    Data should be saved on the trainer.state variable
+        (optionally use trainer.state.train/trainer.state.eval)
 
     Args:
         - device: torch device
@@ -50,23 +71,25 @@ class GenericTrainer:
 
     """
 
-    def __init__(self,
-                 device: torch.device,
-                 model: nn.Module,
-                 optimiser: optim.Optimizer,
-                 scheduler: optim.lr_scheduler._LRScheduler = None,
-                 checkpoint_model: bool = False,
-                 checkpoint_every_n: int = 1,
-                 model_name: str = None,
-                 print_perf: bool = True,
-                 use_tqdm: bool = True,
-                 use_avg_loss: bool = False):
+    def __init__(
+        self,
+        device: torch.device,
+        model: nn.Module,
+        optimiser: optim.Optimizer,
+        scheduler: optim.lr_scheduler._LRScheduler = None,
+        checkpoint_model: bool = False,
+        checkpoint_every_n: int = 1,
+        model_name: str = None,
+        print_perf: bool = True,
+        use_tqdm: bool = True,
+        use_avg_loss: bool = False,
+    ):
 
         if checkpoint_model:
             assert checkpoint_every_n > 0
-            assert model_name is not None, (
-                'When checkpointing the model, model_name should be specified'
-            )
+            assert (
+                model_name is not None
+            ), "When checkpointing the model, model_name should be specified"
 
         self.device = device
         self.model = model
@@ -84,14 +107,22 @@ class GenericTrainer:
 
         # events supported by current hooks
         events = [
-            const.BEFORE_EPOCH, const.AFTER_EPOCH,
-            const.BEFORE_MINIBATCH, const.AFTER_MINIBATCH,
-            const.BEFORE_TRAIN_MINIBATCH, const.AFTER_TRAIN_MINIBATCH,
-            const.BEFORE_EVAL_MINIBATCH, const.AFTER_EVAL_MINIBATCH,
-            const.BEFORE_TEST_MINIBATCH, const.AFTER_TEST_MINIBATCH,
-            const.BEFORE_TRAIN, const.AFTER_TRAIN,
-            const.BEFORE_EVAL, const.AFTER_EVAL,
-            const.BEFORE_TEST, const.AFTER_TEST,
+            const.BEFORE_EPOCH,
+            const.AFTER_EPOCH,
+            const.BEFORE_MINIBATCH,
+            const.AFTER_MINIBATCH,
+            const.BEFORE_TRAIN_MINIBATCH,
+            const.AFTER_TRAIN_MINIBATCH,
+            const.BEFORE_EVAL_MINIBATCH,
+            const.AFTER_EVAL_MINIBATCH,
+            const.BEFORE_TEST_MINIBATCH,
+            const.AFTER_TEST_MINIBATCH,
+            const.BEFORE_TRAIN,
+            const.AFTER_TRAIN,
+            const.BEFORE_EVAL,
+            const.AFTER_EVAL,
+            const.BEFORE_TEST,
+            const.AFTER_TEST,
         ]
         self._hooks: typing.Dict[const.Event, list] = {e: list() for e in events}
 
@@ -128,7 +159,8 @@ class GenericTrainer:
         """
         Decorator to add new functions to be executed given an event.
         The only argument passed to the function is the trainer object.
-        All data should be saved/read from it using the auxiliary state, state.train and state.eval variables
+        All data should be saved/read from it using the auxiliary
+            state, state.train and state.eval variables
         Some variables should not have its variables altered, namely:
             - state.current_epoch
             - state.current_minibatch
@@ -149,15 +181,19 @@ class GenericTrainer:
             if where in self._hooks:
                 self._hooks[where].append((every_n_epochs, func))
             else:
-                raise ValueError('Hook {} does not exists'.format(where))
+                raise ValueError("Hook {} does not exists".format(where))
             return func
+
         return wrapper
 
-    def add_hook(self, func: Callable, where: const.Event, every_n_epochs: int = 1) -> None:
+    def add_hook(
+        self, func: Callable, where: const.Event, every_n_epochs: int = 1
+    ) -> None:
         """
         Function to add new functions to be executed given an event.
         The only argument passed to the function is the trainer object.
-        All data should be saved/read from it using the auxiliary state, state.train and state.eval variables
+        All data should be saved/read from it using the auxiliary
+            state, state.train and state.eval variables
         Some variables should not have its variables altered, namely:
             - state.current_epoch
             - state.current_minibatch
@@ -177,7 +213,7 @@ class GenericTrainer:
         if where in self._hooks:
             self._hooks[where].append((every_n_epochs, func))
         else:
-            raise ValueError('Hook {} does not exists'.format(where))
+            raise ValueError("Hook {} does not exists".format(where))
 
     def _run_hooks(self, where: const.Event) -> None:
         """
@@ -192,7 +228,7 @@ class GenericTrainer:
             for every, hook in self._hooks[where]:
                 hook(self)
         else:
-            raise ValueError('Hook {} does not exists'.format(where))
+            raise ValueError("Hook {} does not exists".format(where))
 
     def print_epoch_performance(self) -> None:
         """
@@ -207,16 +243,13 @@ class GenericTrainer:
         eval_loss = self.state.eval_loss
         elapsed_time = self.state.elapsed_time
 
-        s = ('(Epoch #{}) Train loss {:.4f}'
-             ' | Eval loss {:.4f} ({:.2f} s)')
+        s = "(Epoch #{}) Train loss {:.4f}" " | Eval loss {:.4f} ({:.2f} s)"
 
-        s = s.format(epoch, train_loss,
-                     eval_loss, elapsed_time)
+        s = s.format(epoch, train_loss, eval_loss, elapsed_time)
         print(s)
 
     def update_best_model(
-        self,
-        best_model: Dict[str, Union[float, Any]]
+        self, best_model: Dict[str, Union[float, Any]]
     ) -> Dict[str, Union[float, Any]]:
         """
         Updates best model using best_model['loss'].
@@ -227,14 +260,16 @@ class GenericTrainer:
 
         eval_loss = self.state.eval_loss
 
-        if best_model is None or eval_loss < best_model['loss']:
+        if best_model is None or eval_loss < best_model["loss"]:
             best_model = {}
-            best_model['loss'] = eval_loss
-            best_model['model'] = self.model.state_dict()
+            best_model["loss"] = eval_loss
+            best_model["model"] = self.model.state_dict()
 
         return best_model
 
-    def train_minibatch(self, X: torch.Tensor, y: torch.Tensor) -> Tuple[torch.Tensor, float]:
+    def train_minibatch(
+        self, X: torch.Tensor, y: torch.Tensor
+    ) -> Tuple[torch.Tensor, float]:
         output = self.model(X)
         loss = self.compute_loss(output, y)
 
@@ -247,7 +282,9 @@ class GenericTrainer:
         output = output.detach()
         return output, total_loss
 
-    def eval_minibatch(self, X: torch.Tensor, y: torch.Tensor) -> Tuple[torch.Tensor, float]:
+    def eval_minibatch(
+        self, X: torch.Tensor, y: torch.Tensor
+    ) -> Tuple[torch.Tensor, float]:
         output = self.model(X)
         loss = self.compute_loss(output, y)
 
@@ -263,7 +300,7 @@ class GenericTrainer:
 
         if self.use_tqdm:
             epoch = self.state.current_epoch
-            msg = 'Training (epoch {})'.format(epoch)
+            msg = "Training (epoch {})".format(epoch)
             it = tqdm(dataloader, desc=msg, leave=False)
         else:
             it = dataloader
@@ -274,25 +311,19 @@ class GenericTrainer:
             batch_size = X.size(0)
 
             self.state.current_minibatch_stats = {
-                'size': batch_size,
+                "size": batch_size,
             }
 
-            self.state.current_minibatch = {
-                'X': X,
-                'y': y,
-                'size': batch_size
-            }
+            self.state.current_minibatch = {"X": X, "y": y, "size": batch_size}
 
             self._run_hooks(const.BEFORE_MINIBATCH)
             self._run_hooks(const.BEFORE_TRAIN_MINIBATCH)
 
             output, loss = self.train_minibatch(X, y)
 
-            self.state.current_minibatch.update({
-                'output': output,
-            })
+            self.state.current_minibatch.update({"output": output})
 
-            self.state.current_minibatch_stats['loss'] = loss
+            self.state.current_minibatch_stats["loss"] = loss
 
             self._run_hooks(const.AFTER_MINIBATCH)
             self._run_hooks(const.AFTER_TRAIN_MINIBATCH)
@@ -307,7 +338,7 @@ class GenericTrainer:
 
         if self.use_tqdm:
             epoch = self.state.current_epoch
-            msg = 'Evaluating (epoch {})'.format(epoch)
+            msg = "Evaluating (epoch {})".format(epoch)
             it = tqdm(dataloader, desc=msg, leave=False)
         else:
             it = dataloader
@@ -319,25 +350,19 @@ class GenericTrainer:
                 batch_size = X.size(0)
 
                 self.state.current_minibatch_stats = {
-                    'size': batch_size,
+                    "size": batch_size,
                 }
 
-                self.state.current_minibatch = {
-                    'X': X,
-                    'y': y,
-                    'size': batch_size
-                }
+                self.state.current_minibatch = {"X": X, "y": y, "size": batch_size}
 
                 self._run_hooks(const.BEFORE_MINIBATCH)
                 self._run_hooks(const.BEFORE_EVAL_MINIBATCH)
 
                 output, loss = self.eval_minibatch(X, y)
 
-                self.state.current_minibatch.update({
-                    'output': output,
-                })
+                self.state.current_minibatch.update({"output": output})
 
-                self.state.current_minibatch_stats['loss'] = loss
+                self.state.current_minibatch_stats["loss"] = loss
 
                 self._run_hooks(const.AFTER_MINIBATCH)
                 self._run_hooks(const.AFTER_EVAL_MINIBATCH)
@@ -351,7 +376,7 @@ class GenericTrainer:
         self.state.test.minibatch_stats = []
 
         if self.use_tqdm:
-            msg = 'Testing'
+            msg = "Testing"
             it = tqdm(dataloader, desc=msg, leave=False)
         else:
             it = dataloader
@@ -362,26 +387,18 @@ class GenericTrainer:
                 y = y.to(self.device)
                 batch_size = X.size(0)
 
-                self.state.current_minibatch_stats = {
-                    'size': batch_size
-                }
+                self.state.current_minibatch_stats = {"size": batch_size}
 
-                self.state.current_minibatch = {
-                    'X': X,
-                    'y': y,
-                    'size': batch_size
-                }
+                self.state.current_minibatch = {"X": X, "y": y, "size": batch_size}
 
                 self._run_hooks(const.BEFORE_MINIBATCH)
                 self._run_hooks(const.BEFORE_TEST_MINIBATCH)
 
                 output, loss = self.eval_minibatch(X, y)
 
-                self.state.current_minibatch.update({
-                    'output': output,
-                })
+                self.state.current_minibatch.update({"output": output})
 
-                self.state.current_minibatch_stats['loss'] = loss
+                self.state.current_minibatch_stats["loss"] = loss
 
                 self._run_hooks(const.AFTER_MINIBATCH)
                 self._run_hooks(const.AFTER_TEST_MINIBATCH)
@@ -397,28 +414,31 @@ class GenericTrainer:
                 scheduler_state = self.scheduler.state_dict()
 
             epoch = self.state.current_epoch
-            torch.save({
-                'epoch': epoch,
-                'model_state': self.model.state_dict(),
-                'optimiser_state': self.optimiser.state_dict(),
-                'scheduler_state': scheduler_state,
-                'best_model': best_model,
-            }, self.model_name)
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state": self.model.state_dict(),
+                    "optimiser_state": self.optimiser.state_dict(),
+                    "scheduler_state": scheduler_state,
+                    "best_model": best_model,
+                },
+                self.model_name,
+            )
 
     def load_model(self) -> Tuple[int, Dict[str, Union[float, Dict]]]:
         checkpoint = torch.load(self.model_name)
-        self.model.load_state_dict(checkpoint['model_state'])
-        self.optimiser.load_state_dict(checkpoint['optimiser_state'])
+        self.model.load_state_dict(checkpoint["model_state"])
+        self.optimiser.load_state_dict(checkpoint["optimiser_state"])
         if self.scheduler is not None:
-            self.scheduler.load_state_dict(checkpoint['scheduler_state'])
-        start_epoch = checkpoint['epoch']
-        best_model = checkpoint['best_model']
+            self.scheduler.load_state_dict(checkpoint["scheduler_state"])
+        start_epoch = checkpoint["epoch"]
+        best_model = checkpoint["best_model"]
 
         return start_epoch, best_model
 
     def load_best_model(self):
         checkpoint = torch.load(self.model_name)
-        best_model = checkpoint['best_model']['model']
+        best_model = checkpoint["best_model"]["model"]
         self.model.load_state_dict(best_model)
 
         return self.model
@@ -463,9 +483,13 @@ class GenericTrainer:
         end_time = time.time()
         elapsed_time = end_time - start_time
         days, hours, minutes, seconds = parse_seconds(elapsed_time)
-        print('Training done in {}d, {}h {}min {:.2f}s'.format(days, hours, minutes, seconds))
+        print(
+            "Training done in {}d, {}h {}min {:.2f}s".format(
+                days, hours, minutes, seconds
+            )
+        )
 
-        self.model.load_state_dict(best_model['model'])
+        self.model.load_state_dict(best_model["model"])
         return self.model
 
     def test(self, test_dataloader, load=False):

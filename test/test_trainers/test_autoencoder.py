@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 import time
 from collections import namedtuple
 
@@ -7,12 +8,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
-from torchvision import datasets, models, transforms
+
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
 
 from torchfuel.data_loaders.image import ImageToImageDataLoader
 from torchfuel.layers.utils import Flatten, ReshapeToImg
 from torchfuel.trainers.mse import MSETrainer
 from torchfuel.transforms.noise import DropPixelNoiser, GaussianNoiser
+from torchvision import datasets, models, transforms
 
 
 def test():
@@ -29,9 +35,7 @@ def test():
             )
 
             self.decoder = nn.Sequential(
-                nn.Linear(50, 56 * 56 * 3),
-                nn.Sigmoid(),
-                ReshapeToImg(3, 56, 56),
+                nn.Linear(50, 56 * 56 * 3), nn.Sigmoid(), ReshapeToImg(3, 56, 56),
             )
 
         def forward(self, x):
@@ -39,14 +43,14 @@ def test():
             x = self.decoder(x)
             return x
 
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     dl = ImageToImageDataLoader(
-        train_data_folder='test/imgs/train',
-        eval_data_folder='test/imgs/eval',
+        train_data_folder="test/imgs/train",
+        eval_data_folder="test/imgs/eval",
         tensor_transformations=[],
         size=56,
-        imagenet_format=False
+        imagenet_format=False,
     )
 
     train_dataloader = dl.train_dl
@@ -56,7 +60,7 @@ def test():
 
     optimiser = optim.Adam(model.parameters(), lr=0.01)
 
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=50)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimiser, "min", patience=50)
 
     epochs = 10
     trainer = MSETrainer(
@@ -65,7 +69,7 @@ def test():
         optimiser,
         scheduler,
         checkpoint_model=True,
-        model_name='test/autoencoder.pt'
+        model_name="test/autoencoder.pt",
     )
 
     trainer.fit(epochs, train_dataloader, eval_dataloader)
@@ -74,8 +78,8 @@ def test():
     # will need to load model
     trainer.fit(epochs, train_dataloader, eval_dataloader)
 
-    os.remove('test/autoencoder.pt')
+    os.remove("test/autoencoder.pt")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

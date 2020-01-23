@@ -1,16 +1,35 @@
-from typing import Dict, Optional, Union, Any
+import os
+import sys
+from typing import Any, Dict, Optional, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+torchfuel_path = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+)
+sys.path.append(torchfuel_path)
+
 import torchfuel.trainers.const as const
-from torchfuel.trainers.generic import GenericTrainer
-from torchfuel.trainers.hooks.metrics import (compute_epoch_acc,
-                                              compute_epoch_cm,
-                                              compute_minibatch_cm,
-                                              compute_minibatch_correct_preds)
+
+try:
+    from generic import GenericTrainer
+    from hooks.metrics import (
+        compute_epoch_acc,
+        compute_epoch_cm,
+        compute_minibatch_cm,
+        compute_minibatch_correct_preds,
+    )
+except:
+    from .generic import GenericTrainer
+    from .hooks.metrics import (
+        compute_epoch_acc,
+        compute_epoch_cm,
+        compute_minibatch_cm,
+        compute_minibatch_correct_preds,
+    )
 
 
 class ClassificationTrainer(GenericTrainer):
@@ -32,20 +51,21 @@ class ClassificationTrainer(GenericTrainer):
 
     """
 
-    def __init__(self,
-                 device: torch.device,
-                 model: nn.Module,
-                 optimiser: optim.Optimizer,
-                 scheduler: optim.lr_scheduler._LRScheduler = None,
-                 n_classes: bool = None,
-                 compute_confusion_matrix: bool = False,
-                 checkpoint_model: bool = False,
-                 checkpoint_every_n: int = 1,
-                 model_name: str = 'model.pt',
-                 print_perf: bool = True,
-                 use_avg_loss: bool = False,
-                 use_tqdm: bool = True,
-                 ):
+    def __init__(
+        self,
+        device: torch.device,
+        model: nn.Module,
+        optimiser: optim.Optimizer,
+        scheduler: optim.lr_scheduler._LRScheduler = None,
+        n_classes: bool = None,
+        compute_confusion_matrix: bool = False,
+        checkpoint_model: bool = False,
+        checkpoint_every_n: int = 1,
+        model_name: str = "model.pt",
+        print_perf: bool = True,
+        use_avg_loss: bool = False,
+        use_tqdm: bool = True,
+    ):
 
         super().__init__(
             device,
@@ -99,16 +119,14 @@ class ClassificationTrainer(GenericTrainer):
         train_acc = self.state.train_acc
         eval_acc = self.state.eval_acc
 
-        s = ('(Epoch #{}) Train loss {:.3f} & acc {:.2f}'
-             ' | Eval loss {:.4f} & acc {:.2f} ({:.2f} s)')
-
-        s = s.format(epoch, train_loss, train_acc,
-                     eval_loss, eval_acc, elapsed_time)
+        s = (
+            f"(Epoch #{epoch}) Train loss {train_loss:.3f} & acc {train_acc:.2f}"
+            f" | Eval loss {eval_loss:.4f} & acc {eval_acc:.2f} ({elapsed_time:.2f} s)"
+        )
         print(s)
 
     def update_best_model(
-        self,
-        best_model: Dict[str, Union[float, Any]]
+        self, best_model: Dict[str, Union[float, Any]]
     ) -> Dict[str, Union[float, Any]]:
         """
         Updates best model using best_model['acc']
@@ -116,9 +134,9 @@ class ClassificationTrainer(GenericTrainer):
         """
         eval_acc = self.state.eval_acc
 
-        if best_model is None or eval_acc > best_model['acc']:
+        if best_model is None or eval_acc > best_model["acc"]:
             best_model = {}
-            best_model['acc'] = eval_acc
-            best_model['model'] = self.model.state_dict()
+            best_model["acc"] = eval_acc
+            best_model["model"] = self.model.state_dict()
 
         return best_model

@@ -6,24 +6,26 @@ from torchvision import datasets, transforms
 
 
 class ImageDataLoader:
-    def __init__(self,
-                 train_data_folder: str,
-                 eval_data_folder: str,
-                 test_data_folder: Optional[str] = None,
-                 pil_transformations: Optional[Iterable] = None,
-                 tensor_transformations: Optional[Iterable] = None,
-                 batch_size: int = 64,
-                 shuffle: bool = True,
-                 num_workers: int = 4,
-                 imagenet_format=False,
-                 size: Union[int, Iterable] = None,
-                 mean: Optional[Iterable] = None,
-                 std: Optional[Iterable] = None,
-                 pil_transformations_eval: Optional[Iterable] = None,
-                 tensor_transformations_eval: Optional[Iterable] = None,
-                 pil_transformations_test: Optional[Iterable] = None,
-                 tensor_transformations_test: Optional[Iterable] = None,
-                 dataset_class: Dataset = datasets.ImageFolder):
+    def __init__(
+        self,
+        train_data_folder: str,
+        eval_data_folder: str,
+        test_data_folder: Optional[str] = None,
+        pil_transformations: Optional[Iterable] = None,
+        tensor_transformations: Optional[Iterable] = None,
+        batch_size: int = 64,
+        shuffle: bool = True,
+        num_workers: int = 4,
+        imagenet_format=False,
+        size: Union[int, Iterable] = None,
+        mean: Optional[Iterable] = None,
+        std: Optional[Iterable] = None,
+        pil_transformations_eval: Optional[Iterable] = None,
+        tensor_transformations_eval: Optional[Iterable] = None,
+        pil_transformations_test: Optional[Iterable] = None,
+        tensor_transformations_test: Optional[Iterable] = None,
+        dataset_class: Dataset = datasets.ImageFolder,
+    ):
 
         if pil_transformations is None:
             pil_transformations = []
@@ -55,7 +57,9 @@ class ImageDataLoader:
         if self.imagenet_format:
             assert all(v is None for v in [self.size, self.mean, self.std])
         else:
-            assert self.size is not None, 'imagenet_format should be True or size must be specified'
+            assert (
+                self.size is not None
+            ), "imagenet_format should be True or size must be specified"
 
         # prepare data
         self.prepare()
@@ -75,7 +79,7 @@ class ImageDataLoader:
             size = self.size
             normalise = False
         else:
-            raise Exception('imagenet_format should be True or size must be specified')
+            raise Exception("imagenet_format should be True or size must be specified")
 
         # train transforms
         train_t = [
@@ -129,12 +133,17 @@ class ImageDataLoader:
             test_transforms = transforms.Compose(test_t)
 
         train_data = self.dataset_class(self.train_data_folder, train_transforms)
-        train_dataloader = DataLoader(train_data, self.batch_size,
-                                      shuffle=self.shuffle, num_workers=self.num_workers)
+        train_dataloader = DataLoader(
+            train_data,
+            self.batch_size,
+            shuffle=self.shuffle,
+            num_workers=self.num_workers,
+        )
 
         eval_data = self.dataset_class(self.eval_data_folder, eval_transforms)
-        eval_dataloader = DataLoader(eval_data, self.batch_size,
-                                     shuffle=False, num_workers=self.num_workers)
+        eval_dataloader = DataLoader(
+            eval_data, self.batch_size, shuffle=False, num_workers=self.num_workers
+        )
 
         self.train_dl = train_dataloader
         self.eval_dl = eval_dataloader
@@ -145,8 +154,9 @@ class ImageDataLoader:
 
         if self.test_data_folder:
             test_data = self.dataset_class(self.test_data_folder, test_transforms)
-            test_dataloader = DataLoader(test_data, self.batch_size,
-                                         shuffle=False, num_workers=self.num_workers)
+            test_dataloader = DataLoader(
+                test_data, self.batch_size, shuffle=False, num_workers=self.num_workers
+            )
             self.test_dl = test_dataloader
 
 
@@ -157,25 +167,26 @@ class ImageToImageReader(datasets.ImageFolder):
 
 
 class ImageToImageDataLoader(ImageDataLoader):
-    def __init__(self,
-                 train_data_folder: str,
-                 eval_data_folder: str,
-                 test_data_folder: str = None,
-                 pil_transformations: Optional[list] = None,
-                 tensor_transformations: Optional[list] = None,
-                 batch_size: int = 64,
-                 shuffle: bool = True,
-                 num_workers: int = 4,
-                 imagenet_format=False,
-                 size: Union[int, Iterable] = None,
-                 mean: Optional[Iterable] = None,
-                 std: Optional[Iterable] = None,
-                 pil_transformations_eval: Optional[Iterable] = None,
-                 tensor_transformations_eval: Optional[Iterable] = None,
-                 pil_transformations_test: Optional[Iterable] = None,
-                 tensor_transformations_test: Optional[Iterable] = None,
-                 dataset_class: Dataset = datasets.ImageFolder
-                 ):
+    def __init__(
+        self,
+        train_data_folder: str,
+        eval_data_folder: str,
+        test_data_folder: str = None,
+        pil_transformations: Optional[list] = None,
+        tensor_transformations: Optional[list] = None,
+        batch_size: int = 64,
+        shuffle: bool = True,
+        num_workers: int = 4,
+        imagenet_format=False,
+        size: Union[int, Iterable] = None,
+        mean: Optional[Iterable] = None,
+        std: Optional[Iterable] = None,
+        pil_transformations_eval: Optional[Iterable] = None,
+        tensor_transformations_eval: Optional[Iterable] = None,
+        pil_transformations_test: Optional[Iterable] = None,
+        tensor_transformations_test: Optional[Iterable] = None,
+        dataset_class: Dataset = datasets.ImageFolder,
+    ):
 
         super().__init__(
             train_data_folder,
@@ -194,12 +205,13 @@ class ImageToImageDataLoader(ImageDataLoader):
             tensor_transformations_eval,
             pil_transformations_test,
             tensor_transformations_test,
-            dataset_class=ImageToImageReader
+            dataset_class=ImageToImageReader,
         )
 
     def prepare(self):
         super().prepare()
         del self.n_classes
+
 
 class ImageFolderWithPaths(datasets.ImageFolder):
     def __getitem__(self, index):
